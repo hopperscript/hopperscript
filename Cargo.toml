@@ -1,0 +1,8 @@
+[package]
+# TODO: change name
+name = "hs-lang"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]

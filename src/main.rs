@@ -1,3 +1,34 @@
+/// starting point ig
+use std::env;
+
+// constants (lol)
+const LANG_NAME: &str = "hs-lang";
+const HELP_MENU: &str = "compiler
+
+Compiles code into a Hopscotch JSON file.
+
+OPTIONS:
+	%n compile [FILENAME]
+";
+const COMMAND_NAME: &str = "command-name";
+
 fn main() {
-    println!("nothing to see here");
+    if env::args().len() == 1 {
+        // no args
+        println!(
+            "{} Compiler\nUse \"{} help\" for help",
+            LANG_NAME, COMMAND_NAME
+        );
+    } else {
+        let args: Vec<String> = env::args().collect();
+        if args[1] == "help" {
+            // help command
+            println!("{} {}", LANG_NAME, HELP_MENU.replace("%n", COMMAND_NAME))
+        } else if args[1] == "compile" {
+            // compile
+        } else {
+            // unknown
+            println!("Unknown option.\nUse \"{} help\" for help", COMMAND_NAME)
+        }
+    }
 }
