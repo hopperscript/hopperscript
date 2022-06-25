@@ -36,8 +36,8 @@ define ability "Say Hello" {
   setText("hello universe", colors.RANDOM)
 }
 
-for("My Object") {
-  when(rules.GAME_STARTS()) {
+for My Object" {
+  when rules.GAME_STARTS() {
     abilities."Say Hello"()
   }
 }
@@ -49,7 +49,7 @@ To edit what's inside an object, use the `for` keyword:
 ```
 define object objects.TOUCAN "My wonderful toucan"
 
-for("My wonderful toucan") {
+for "My wonderful toucan" {
   (* your rules... *)
 }
 ```
@@ -58,7 +58,7 @@ for("My wonderful toucan") {
 Rules are pretty simple. Just use the `when` keyword:
 
 ```
-when(rules.GAME_STARTS()) {
+when rules.GAME_STARTS() {
   (* your blocks... *)
 }
 ```
@@ -67,7 +67,7 @@ when(rules.GAME_STARTS()) {
 Blocks are also simple. Pretty much self-explanatory:
 
 ```
-when(rules.GAME_STARTS()) {
+when rules.GAME_STARTS() {
   moveForward(10)
   setPosition(300, 400)
 }
