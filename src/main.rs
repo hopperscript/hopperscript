@@ -1,4 +1,8 @@
 /// starting point ig
+
+mod compile;
+
+//
 use std::env;
 
 // constants (lol)
@@ -26,6 +30,7 @@ fn main() {
             println!("{} {}", LANG_NAME, HELP_MENU.replace("%n", COMMAND_NAME))
         } else if args[1] == "compile" {
             // compile
+            compile::compile(compile::read_file(&args[2]))
         } else {
             // unknown
             println!("Unknown option.\nUse \"{} help\" for help", COMMAND_NAME)
