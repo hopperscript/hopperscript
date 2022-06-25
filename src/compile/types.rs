@@ -1,5 +1,5 @@
 #[allow(dead_code)]
 
-pub struct Fncall{
-	pub fnname: String
+pub struct Fncall {
+    pub fnname: String,
 }

@@ -1,12 +1,11 @@
 /// starting point ig
-
 mod compile;
 
 //
 use std::env;
 
 // constants (lol)
-const LANG_NAME: &str = "hs-lang";
+const LANG_NAME: &str = "hopperscript";
 const HELP_MENU: &str = "compiler
 
 Compiles code into a Hopscotch JSON file.
