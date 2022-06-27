@@ -9,6 +9,6 @@ pub fn read_file(path: &String) -> String {
 
 /// main compile function
 pub fn compile(code: String) {
-    //only testing
-    println!("{:?}", grammar::parser::lines(&code).ok().unwrap());
+    // only testing (uncomment)
+    // println!("{:?}", (grammar::parser::blocks(&code)));
 }
