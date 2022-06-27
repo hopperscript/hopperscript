@@ -8,21 +8,21 @@ By default, Hopperscript doesn't know anything about blocks (like *Set Color*, *
 Every definition of a variable, abilities, custom rules, etc *should* be done at the very top of the file. To define something, use the `define` keyword.
 
 ### Global Variables
-Use `define var <variable name>` to define game/global variables:
+Use `define var"<variable name>"` to define game/global variables:
 
 ```
-define var my variable
-define var myVariable
+define var "my variable"
+define var "myVariable"
 
 ...
 ```
 
 ### Objects
-Use `define object objects.<object type> "<name>"` to define objects. The object types are provided by the block list.
+Use `define object(objects.<object type>, "<name>")` to define objects. The object types are provided by the block list.
 
 ```
-define object objects.PARALLELOGRAM "Parallelogram 1"
-define object objects.TOUCAN "My Toucan"
+define object(objects.PARALLELOGRAM, "Parallelogram 1")
+define object(objects.TOUCAN, "My Toucan")
 
 ...
 ```
@@ -31,13 +31,13 @@ define object objects.TOUCAN "My Toucan"
 Use `define ability "<ability name>" { (* code *) }` to define custom abilities.
 
 ```
-define object objects.SQUARE "My Object"
+define object(objects.SQUARE, "My Object")
 define ability "Say Hello" {
   setText("hello universe", colors.RANDOM)
 }
 
-for("My Object") {
-  when(rules.GAME_STARTS()) {
+for My Object" {
+  when rules.GAME_STARTS() {
     abilities."Say Hello"()
   }
 }
@@ -47,9 +47,9 @@ for("My Object") {
 To edit what's inside an object, use the `for` keyword:
 
 ```
-define object objects.TOUCAN "My wonderful toucan"
+define object(objects.TOUCAN, "My wonderful toucan")
 
-for("My wonderful toucan") {
+for "My wonderful toucan" {
   (* your rules... *)
 }
 ```
@@ -58,7 +58,7 @@ for("My wonderful toucan") {
 Rules are pretty simple. Just use the `when` keyword:
 
 ```
-when(rules.GAME_STARTS()) {
+when rules.GAME_STARTS() {
   (* your blocks... *)
 }
 ```
@@ -67,7 +67,7 @@ when(rules.GAME_STARTS()) {
 Blocks are also simple. Pretty much self-explanatory:
 
 ```
-when(rules.GAME_STARTS()) {
+when rules.GAME_STARTS() {
   moveForward(10)
   setPosition(300, 400)
 }
