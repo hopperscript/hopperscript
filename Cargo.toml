@@ -1,10 +1,18 @@
 [package]
 # TODO: change name
-name = "hs-lang"
+name = "hopperscript"
 version = "0.1.0"
 edition = "2021"
+
+[[bin]]
+name = "cli"
+path = "src/cli/mod.rs"
+
+[lib]
+name = "lib"
+path = "src/compiler/mod.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-peg = "0.8.0"
+nom = "7.1.1"

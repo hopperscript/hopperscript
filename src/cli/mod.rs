@@ -1,8 +1,18 @@
-/// starting point ig
-mod compile;
-
-//
+/// central file for the compiler
+use std::fs;
+use lib::compile as comp;
 use std::env;
+
+pub fn read_file(path: &String) -> String {
+    let val = fs::read_to_string(path).expect("Error reading file.");
+    val
+}
+
+/// main compile function
+pub fn compile(code: String) {
+    // only testing (uncomment)
+    println!("{:?}", (comp(&code)));
+}
 
 // constants (lol)
 const LANG_NAME: &str = "hopperscript";
@@ -29,7 +39,7 @@ fn main() {
             println!("{} {}", LANG_NAME, HELP_MENU.replace("%n", COMMAND_NAME))
         } else if args[1] == "compile" {
             // compile
-            compile::compile(compile::read_file(&args[2]))
+            compile(read_file(&args[2]))
         } else {
             // unknown
             println!("Unknown option.\nUse \"{} help\" for help", COMMAND_NAME)
