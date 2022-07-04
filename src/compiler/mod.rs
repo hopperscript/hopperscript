@@ -1,42 +1,30 @@
 mod define;
+mod typess;
+mod types;
 
 /// Main module for the compiler
 pub mod compiler {
-    use nom::{
-        IResult,
-        sequence::delimited,
-        character::complete::char,
-        bytes::complete::is_not
-    };
+    use nom::character::complete::newline;
+    use nom::multi::separated_list0;
 
     use crate::define::define;
-
-    /// for strings (`""`) I guess?
-    fn string(i: &str) -> IResult<&str, &str> {
-        delimited(char('"'), is_not("\""), char('"'))(i)
-    }
+    use crate::types::{self, Project};
 
     /// The main compile fn
     /// 
     /// Just throw a string that needs to be compiled
     /// 
     /// I mean a `str`
-    pub fn compile(input: &str) -> IResult<&str, &str> {
-        define(input)
+    pub fn compile(input: &str) -> types::Project {
+        let mut project = Project {
+            variables: vec![]
+        };
+
+        project.variables = separated_list0(newline, define)(input).unwrap().1.into_iter().map(String::from).collect();
+
+        project
     }
 }
-
-//peg::parser! {
-//    pub grammar parser() for str {
-//        rule string() -> String
-//            = s:$("\""[str]"\"") { String::from(s) }
-
-//        pub rule define() -> String
-//            = s:$("define "$([str]+) $([str]*)) {
-//                String::from(s)
-//            }
-//    }
-//}
 
 // for later use:
 

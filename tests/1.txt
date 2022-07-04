@@ -1,1 +1,2 @@
-define object "test"
+define var "test"
+define object "idk"
