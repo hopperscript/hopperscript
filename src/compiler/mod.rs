@@ -1,18 +1,26 @@
-use nom::{
-    IResult,
-    sequence::delimited,
-    character::complete::char,
-    bytes::complete::is_not
-};
+/// Main file for the compiler
 
 mod define;
 
-fn string(i: &str) -> IResult<&str, &str> {
-    delimited(char('"'), is_not("\""), char('"'))(i)
-}
+pub mod compiler {
+    use nom::{
+        IResult,
+        sequence::delimited,
+        character::complete::char,
+        bytes::complete::is_not
+    };
 
-pub fn compile(input: &str) -> IResult<&str, &str> {
-    define::define(input)
+    use crate::define::define;
+
+    // for strings (`""`) I guess?
+    fn string(i: &str) -> IResult<&str, &str> {
+        delimited(char('"'), is_not("\""), char('"'))(i)
+    }
+
+    // The main compile fn
+    pub fn compile(input: &str) -> IResult<&str, &str> {
+        define(input)
+    }
 }
 
 //peg::parser! {
