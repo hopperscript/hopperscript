@@ -1,7 +1,6 @@
-/// Main file for the compiler
-
 mod define;
 
+/// Main module for the compiler
 pub mod compiler {
     use nom::{
         IResult,
@@ -12,12 +11,16 @@ pub mod compiler {
 
     use crate::define::define;
 
-    // for strings (`""`) I guess?
+    /// for strings (`""`) I guess?
     fn string(i: &str) -> IResult<&str, &str> {
         delimited(char('"'), is_not("\""), char('"'))(i)
     }
 
-    // The main compile fn
+    /// The main compile fn
+    /// 
+    /// Just throw a string that needs to be compiled
+    /// 
+    /// I mean a `str`
     pub fn compile(input: &str) -> IResult<&str, &str> {
         define(input)
     }
