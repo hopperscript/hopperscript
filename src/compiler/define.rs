@@ -1,7 +1,9 @@
 use nom::{
   IResult,
   bytes::complete::tag,
-  branch::alt
+  branch::alt,
+  character::streaming::space1,
+  sequence::preceded
 };
 
 use crate::typess::string;
@@ -23,9 +25,7 @@ fn obj(i: &str) -> IResult<&str, &str> {
 pub fn define(i: &str) -> IResult<&str, &str> {
   let (d, _) = tag("define")(i)?;
 
-  let def = d.trim();
-
-  let (res, typ) = alt((var, obj))(def)?;
+  let (res, typ) = preceded(space1, alt((var, obj)))(d)?;
 
   Ok((res, typ))
 }

@@ -4,8 +4,9 @@ mod types;
 
 /// Main module for the compiler
 pub mod compiler {
-    use nom::character::complete::newline;
+    use nom::character::complete::{newline, space0};
     use nom::multi::separated_list0;
+    use nom::sequence::preceded;
 
     use crate::define::define;
     use crate::types::{self, Project};
@@ -20,7 +21,7 @@ pub mod compiler {
             variables: vec![]
         };
 
-        project.variables = separated_list0(newline, define)(input).unwrap().1.into_iter().map(String::from).collect();
+        project.variables = separated_list0(newline, preceded(space0, define))(input).unwrap().1.into_iter().map(String::from).collect();
 
         project
     }
