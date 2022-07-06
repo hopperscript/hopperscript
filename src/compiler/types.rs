@@ -6,5 +6,12 @@ pub struct Fncall {
 
 #[derive(Debug)]
 pub struct Project {
-    pub variables: Vec<String>
+    pub variables: Vec<Variable>
+}
+
+#[derive(Debug)]
+pub struct Variable {
+    pub name: String,
+    pub typ: i32,
+    pub object_id_string: String
 }
