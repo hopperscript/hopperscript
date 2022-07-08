@@ -1,6 +1,7 @@
 mod define;
 mod typess;
 mod types;
+mod get_data;
 
 /// Main module for the compiler
 pub mod compiler {
@@ -22,6 +23,7 @@ pub mod compiler {
     /// 
     /// I mean a `str`
     pub fn compile(input: &str) -> Project {
+        
         let mut project = Project {
             variables: vec![]
         };

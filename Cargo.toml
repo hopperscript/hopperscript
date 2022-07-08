@@ -16,6 +16,7 @@ path = "src/compiler/mod.rs"
 
 [dependencies]
 nom = "7.1.1"
+rhai = "1.8.0"
 
 [dependencies.uuid]
 version = "1.1.2"
