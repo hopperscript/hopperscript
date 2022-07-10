@@ -3,14 +3,14 @@ fn MoveForward(arg){
     "block_class": "method",
     "type": 23,
     "description": "Move Forward",
-    "parameters": []
+    "parameters": [#{
+      "value": arg[0],
+      "defaultValue": "",
+      "key": "",
+      "type": 57
+    }]
   };
-  h.parameters = #{
-    "value": arg[0],
-    "defaultValue": "",
-    "key": "",
-    "type": 57
-  }; h
+  h
 }
 fn main(function, args){
   Fn(function).call(args)
