@@ -1,10 +1,11 @@
 mod define;
 mod typess;
 mod types;
-mod get_data;
+mod getdata;
 
 /// Main module for the compiler
 pub mod compiler {
+
     use nom::character::complete::{newline, space0};
     use nom::multi::separated_list0;
     use nom::sequence::preceded;
@@ -12,6 +13,8 @@ pub mod compiler {
 
     use crate::define::define;
     use crate::types::{Variable, Project};
+    use crate::getdata;
+
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string()
@@ -23,7 +26,8 @@ pub mod compiler {
     /// 
     /// I mean a `str`
     pub fn compile(input: &str) -> Project {
-        
+        getdata::init_block_data();
+
         let mut project = Project {
             variables: vec![]
         };
