@@ -1,0 +1,9 @@
+string = { "\"" ~ text ~ "\"" }
+typ = { "var" | "object" }
+text = { ASCII_ALPHA* }
+
+define = { "define" ~ SPACE_SEPARATOR+ ~ typ ~ SPACE_SEPARATOR+ ~ text }
+
+file = {
+  define
+}

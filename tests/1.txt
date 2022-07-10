@@ -1,2 +1,1 @@
 define var "test"
-  define object "idk"

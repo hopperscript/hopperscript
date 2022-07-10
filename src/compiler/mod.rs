@@ -1,44 +1,40 @@
 mod define;
-mod typess;
 mod types;
+mod typess;
+
+extern crate pest;
+#[macro_use]
+extern crate pest_derive;
 
 /// Main module for the compiler
 pub mod compiler {
-    use nom::character::complete::{newline, space0};
-    use nom::multi::separated_list0;
-    use nom::sequence::preceded;
-    use uuid::Uuid;
+    use pest::{Parser, iterators::Pair};
 
-    use crate::define::define;
-    use crate::types::{Variable, Project};
+    use crate::types::Project;
 
-    fn giv_me_uuid() -> String {
-        Uuid::new_v4().to_string()
-    }
+    #[derive(Parser)]
+    #[grammar = "compiler/script.pest"]
+    struct Script;
 
-    /// The main compile fn
-    /// 
-    /// Just throw a string that needs to be compiled
-    /// 
-    /// I mean a `str`
-    pub fn compile(input: &str) -> Project {
-        let mut project = Project {
+    pub fn compile(i: &str) -> String {
+        let mut proj = Project {
             variables: vec![]
         };
 
-        let (_, defs) = separated_list0(newline, preceded(space0, define))(input).unwrap();
-        
-        for v in defs {
-            match v.1 {
-                0 => project.variables.push(
-                    Variable { name: v.0.to_string(), typ: 8003, object_id_string: giv_me_uuid() }
-                ),
+        let p: Pair<'_, Rule> = Script::parse(Rule::file, i).expect("a").next().unwrap();
 
+        for v in p.into_inner() {
+            match v.as_rule() {
+                Rule::define => {
+                    let mut i = v.into_inner();
+
+                    let typ = i.next().unwrap().as_str();
+                }
                 _ => {}
             }
         }
 
-        project
+        "a".to_string()
     }
 }
 
