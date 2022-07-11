@@ -9,14 +9,19 @@ extern crate pest_derive;
 /// Main module for the compiler
 pub mod compiler {
     use pest::{Parser, iterators::Pair};
+    use uuid::Uuid;
 
-    use crate::types::Project;
+    use crate::types::{Project, Variable};
+
+    fn giv_me_uuid() -> String {
+        Uuid::new_v4().to_string()
+    }
 
     #[derive(Parser)]
     #[grammar = "compiler/script.pest"]
     struct Script;
 
-    pub fn compile(i: &str) -> String {
+    pub fn compile(i: &str) -> Project {
         let mut proj = Project {
             variables: vec![]
         };
@@ -29,12 +34,24 @@ pub mod compiler {
                     let mut i = v.into_inner();
 
                     let typ = i.next().unwrap().as_str();
+                    
+                    match typ {
+                        "var" => {
+                            let name = i.next().unwrap().as_str();
+                            proj.variables.push(Variable {
+                                name: name.to_string(),
+                                typ: 8003,
+                                object_id_string: giv_me_uuid()
+                            })
+                        },
+                        _ => {}
+                    }
                 }
                 _ => {}
             }
         }
 
-        "a".to_string()
+        proj
     }
 }
 
