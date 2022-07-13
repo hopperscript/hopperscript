@@ -3,8 +3,7 @@ mod types;
 /// Main module for the compiler
 pub mod compiler {
     use chumsky::error::Cheap;
-    use chumsky::prelude::*;
-    use chumsky::text::whitespace;
+    use chumsky::{prelude::*, Error};
     use uuid::Uuid;
 
     fn giv_me_uuid() -> String {
@@ -36,10 +35,8 @@ pub mod compiler {
             .collect::<String>();
 
         let def = just("define")
-            .ignore_then(whitespace())
-            .ignore_then(text::ident())
-            .then_ignore(whitespace())
-            .then(stri)
+            .ignore_then(text::ident().padded())
+            .then(stri.padded())
             .map(|(a, b)| Script::Define { typ: a, name: b });
 
         def.recover_with(skip_then_retry_until([]))
