@@ -1,7 +1,6 @@
-use std::fs;
-use chumsky::Parser;
 use lib::compiler::compile;
 use std::env;
+use std::fs;
 
 pub fn read_file(path: &String) -> String {
     let val = fs::read_to_string(path).expect("Error reading file.");
@@ -33,7 +32,7 @@ fn main() {
             println!("{} {}", LANG_NAME, HELP_MENU.replace("%n", COMMAND_NAME))
         } else if args[1] == "compile" {
             // compile
-            println!("{:#?}", compile().parse(read_file(&args[2]).as_str()));
+            println!("{:#?}", compile(read_file(&args[2]).as_str()));
         } else {
             // unknown
             println!("Unknown option.\nUse \"{} help\" for help", COMMAND_NAME)
