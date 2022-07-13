@@ -1,44 +1,51 @@
-mod define;
-mod typess;
 mod types;
 
 /// Main module for the compiler
 pub mod compiler {
-    use nom::character::complete::{newline, space0};
-    use nom::multi::separated_list0;
-    use nom::sequence::preceded;
+    use chumsky::error::Cheap;
+    use chumsky::prelude::*;
+    use chumsky::text::whitespace;
     use uuid::Uuid;
-
-    use crate::define::define;
-    use crate::types::{Variable, Project};
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string()
     }
 
+    pub type Span = std::ops::Range<usize>;
+
+    #[derive(Clone, Debug)]
+    pub enum Script {
+        Define {
+            typ: String,
+            name: String,
+            //val: Option<String>,
+        },
+        Str(String),
+        Loop(Vec<Self>),
+    }
+
     /// The main compile fn
-    /// 
+    ///
     /// Just throw a string that needs to be compiled
-    /// 
+    ///
     /// I mean a `str`
-    pub fn compile(input: &str) -> Project {
-        let mut project = Project {
-            variables: vec![]
-        };
+    pub fn compile() -> impl Parser<char, Vec<(Script, Span)>, Error = Cheap<char>> {
+        let stri = just::<_, _, Cheap<char>>('"')
+            .ignore_then(filter(|c| *c != '"').repeated())
+            .then_ignore(just('"'))
+            .collect::<String>();
 
-        let (_, defs) = separated_list0(newline, preceded(space0, define))(input).unwrap();
-        
-        for v in defs {
-            match v.1 {
-                0 => project.variables.push(
-                    Variable { name: v.0.to_string(), typ: 8003, object_id_string: giv_me_uuid() }
-                ),
+        let def = just("define")
+            .ignore_then(whitespace())
+            .ignore_then(text::ident())
+            .then_ignore(whitespace())
+            .then(stri)
+            .map(|(a, b)| Script::Define { typ: a, name: b });
 
-                _ => {}
-            }
-        }
-
-        project
+        def.recover_with(skip_then_retry_until([]))
+            .map_with_span(|tok, span| (tok, span))
+            .padded()
+            .repeated()
     }
 }
 

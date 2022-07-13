@@ -1,4 +1,5 @@
 use std::fs;
+use chumsky::Parser;
 use lib::compiler::compile;
 use std::env;
 
@@ -32,7 +33,7 @@ fn main() {
             println!("{} {}", LANG_NAME, HELP_MENU.replace("%n", COMMAND_NAME))
         } else if args[1] == "compile" {
             // compile
-            println!("{:#?}", compile(read_file(&args[2]).as_str()));
+            println!("{:#?}", compile().parse(read_file(&args[2]).as_str()));
         } else {
             // unknown
             println!("Unknown option.\nUse \"{} help\" for help", COMMAND_NAME)
