@@ -2,7 +2,7 @@ mod types;
 
 /// Main module for the compiler
 pub mod compiler {
-    use chumsky::error::Cheap;
+    use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
     use chumsky::prelude::*;
     use uuid::Uuid;
 
@@ -31,13 +31,68 @@ pub mod compiler {
     ///
     /// I mean a `str`
     pub fn compile(s: &str) -> Project {
-        let a = ast().parse(s);
+        let (a, errs) = ast().parse_recovery(s);
+
+        // very much copied code
+        // also very experimental
+        errs.into_iter().for_each(|v| {
+            let msg = if let chumsky::error::SimpleReason::Custom(msg) = v.reason() {
+                msg.clone()
+            } else {
+                format!(
+                    "{}{}, expected {}",
+                    if v.found().is_some() {
+                        "Unexpected token"
+                    } else {
+                        "Unexpected end of input"
+                    },
+                    if let Some(label) = v.label() {
+                        format!(" while parsing {}", label)
+                    } else {
+                        String::new()
+                    },
+                    if v.expected().len() == 0 {
+                        "something else".to_string()
+                    } else {
+                        v.expected()
+                            .map(|expected| match expected {
+                                Some(expected) => expected.to_string(),
+                                None => "end of input".to_string(),
+                            })
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    },
+                )
+            };
+
+            Report::build(ReportKind::Error, (), v.span().start)
+                .with_message(msg)
+                .with_label(
+                    Label::new(v.span())
+                        .with_message(match v.reason() {
+                            chumsky::error::SimpleReason::Custom(msg) => msg.clone(),
+                            _ => format!(
+                                "Unexpected {}",
+                                v.found()
+                                    .map(|c| format!("token {}", c.fg(Color::Red)))
+                                    .unwrap_or_else(|| "end of input".to_string())
+                            ),
+                        })
+                        .with_color(Color::Red),
+                )
+                .finish()
+                .print(Source::from(&s))
+                .unwrap();
+
+            // panic?
+        });
+
         gen_project(&a.unwrap())
     }
 
     /// Generate the "AST" or whatever
-    fn ast() -> impl Parser<char, Vec<Script>, Error = Cheap<char>> {
-        let stri = just::<_, _, Cheap<char>>('"')
+    fn ast() -> impl Parser<char, Vec<Script>, Error = Simple<char>> {
+        let stri = just('"')
             .ignore_then(filter(|c| *c != '"').repeated())
             .then_ignore(just('"'))
             .collect::<String>();

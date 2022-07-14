@@ -1,2 +1,2 @@
-define var "test"
+define var "test" sk
   define object "idk" = "aaa"
