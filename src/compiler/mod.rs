@@ -19,7 +19,7 @@ pub mod compiler {
         Define {
             typ: String,
             name: String,
-            //val: Option<String>,
+            val: Option<String>,
         },
         Str(String),
         Loop(Vec<Self>),
@@ -42,18 +42,22 @@ pub mod compiler {
             .collect::<String>();
 
         let var = just("var")
+        .padded()
             .then(stri.padded())
-            .padded()
             .map(|(a, b)| Script::Define {
                 typ: a.to_string(),
                 name: b,
+                val: None
             });
-        let obj = just("object")
+        
+        let obj = just("object").padded()
+            .ignore_then(stri.padded())
+            .then_ignore(just('=').padded())
             .then(stri.padded())
-            .padded()
-            .map(|(a, b)| Script::Define {
-                typ: a.to_string(),
-                name: b,
+            .map(|(a, c)| Script::Define {
+                typ: "obj".to_string(),
+                name: a,
+                val: Some(c)
             });
 
         let def = just("define").ignore_then(var.or(obj));
@@ -68,7 +72,7 @@ pub mod compiler {
 
         for v in p {
             match v {
-                Script::Define { typ, name } => {
+                Script::Define { typ, name, val: _ } => {
                     if typ == "var" {
                         proj.variables.push(Variable {
                             name: name.to_string(),
