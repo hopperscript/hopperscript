@@ -1,6 +1,6 @@
-use std::fs;
 use lib::compiler::compile;
 use std::env;
+use std::fs;
 
 pub fn read_file(path: &String) -> String {
     let val = fs::read_to_string(path).expect("Error reading file.");
