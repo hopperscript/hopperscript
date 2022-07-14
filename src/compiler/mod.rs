@@ -30,9 +30,9 @@ pub mod compiler {
     /// Just throw a string that needs to be compiled
     ///
     /// I mean a `str`
-    pub fn compile(s: &str) -> Project {
+    pub fn compile(s: &str) -> Result<Vec<Script>, Vec<Cheap<char>>> {
         let a = ast().parse(s);
-        gen_project(&a.unwrap())
+        a
     }
 
     fn ast() -> impl Parser<char, Vec<Script>, Error = Cheap<char>> {
@@ -41,10 +41,22 @@ pub mod compiler {
             .then_ignore(just('"'))
             .collect::<String>();
 
-        let def = just("define")
-            .ignore_then(text::ident().padded())
+        let var = just("var")
             .then(stri.padded())
-            .map(|(a, b)| Script::Define { typ: a, name: b });
+            .padded()
+            .map(|(a, b)| Script::Define {
+                typ: a.to_string(),
+                name: b,
+            });
+        let obj = just("object")
+            .then(stri.padded())
+            .padded()
+            .map(|(a, b)| Script::Define {
+                typ: a.to_string(),
+                name: b,
+            });
+
+        let def = just("define").ignore_then(var.or(obj));
 
         def.recover_with(skip_then_retry_until([]))
             .padded()
