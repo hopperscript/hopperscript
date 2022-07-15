@@ -2,6 +2,8 @@ mod types;
 
 /// Main module for the compiler
 pub mod compiler {
+    use std::time::{SystemTime, UNIX_EPOCH};
+
     use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
     use chumsky::prelude::*;
     use uuid::Uuid;
@@ -126,7 +128,11 @@ pub mod compiler {
 
     /// Generate the project
     fn gen_project(p: &[Script]) -> Project {
-        let mut proj = Project { variables: vec![] };
+        use radix_fmt::radix;
+
+        let uuid = radix(SystemTime::now().duration_since(UNIX_EPOCH).expect("Can't generate UUID for some reason").as_millis(), 32).to_string();
+
+        let mut proj = Project { variables: vec![], uuid };
 
         for v in p {
             match v {
