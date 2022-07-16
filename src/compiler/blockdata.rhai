@@ -1,16 +1,9 @@
-fn MoveForward(arg){
-  let h = #{
-    "block_class": "method",
-    "type": 23,
-    "description": "Move Forward",
-    "parameters": [#{
-      "value": arg[0],
-      "defaultValue": "",
-      "key": "",
-      "type": 57
-    }]
-  };
-  h
+fn Square(){
+  #{
+    name: "square",
+    type: 101,
+    filename: "fullSizeSquare.png"
+  }
 }
 fn main(function, args){
   Fn(function).call(args)

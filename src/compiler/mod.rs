@@ -1,6 +1,7 @@
 mod types;
 mod getdata;
 
+
 /// Main module for the compiler
 pub mod compiler {
     use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
@@ -8,6 +9,7 @@ pub mod compiler {
     use uuid::Uuid;
 
     use crate::types::{Project, Variable};
+    use crate::getdata;
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string()
@@ -33,6 +35,7 @@ pub mod compiler {
     /// I mean a `str`
     pub fn compile(s: &str) -> Project {
         let (a, errs) = ast().parse_recovery(s);
+        getdata::init_block_data();
 
         // very much copied code
         // also very experimental
