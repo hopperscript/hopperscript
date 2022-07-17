@@ -1,6 +1,6 @@
-use rhai::{Engine, AST, EvalAltResult};
+use rhai::{Engine, Scope, Map, Array};
 
-pub fn init_block_data(){
+pub fn generate_data_getter() -> impl Fn(&str, Array)->Map{
     let mut ngn = Engine::new();
 
     // increase if ExprTooDeep
@@ -9,5 +9,8 @@ pub fn init_block_data(){
     // file reading needs to be replaced when compiling to wasm
     let ast = ngn.compile_file("src/compiler/blockdata.rhai".into())
     .expect("Error while compiling preset data.");
-    
+    let scope = Scope::new();
+    move |name: &str, args: Array| -> Map{
+        ngn.call_fn(&mut scope.to_owned(), &ast, name, (args,)).unwrap()
+    }
 }
