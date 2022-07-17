@@ -18,7 +18,7 @@ path = "src/compiler/mod.rs"
 rhai = "1.8.0"
 chumsky = "0.8.0"
 ariadne = "0.1.5"
-
+radix_fmt = "1.0.0"
 
 [dependencies.uuid]
 version = "1.1.2"
