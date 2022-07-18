@@ -7,7 +7,7 @@ pub struct Fncall {
 #[derive(Debug)]
 pub struct Project {
     pub variables: Vec<Variable>,
-    pub uuid: String
+    pub uuid: String,
 }
 
 #[derive(Debug)]

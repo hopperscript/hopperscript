@@ -1,16 +1,15 @@
-mod types;
 mod getdata;
-
+mod types;
 
 /// Main module for the compiler
 pub mod compiler {
-    use std::time::{SystemTime, UNIX_EPOCH};
     use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
     use chumsky::prelude::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
     use uuid::Uuid;
 
-    use crate::types::{Project, Variable};
     use crate::getdata;
+    use crate::types::{Project, Variable};
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string()
@@ -37,6 +36,7 @@ pub mod compiler {
     pub fn compile(s: &str) -> Project {
         let (a, errs) = ast().parse_recovery(s);
         let get = getdata::generate_data_getter();
+        get("MoveForward", vec!["0".into()], 9, "hu");
 
         // very much copied code
         // also very experimental
@@ -133,9 +133,19 @@ pub mod compiler {
     fn gen_project(p: &[Script]) -> Project {
         use radix_fmt::radix;
 
-        let uuid = radix(SystemTime::now().duration_since(UNIX_EPOCH).expect("Can't generate UUID for some reason").as_millis(), 32).to_string();
+        let uuid = radix(
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("Can't generate UUID for some reason")
+                .as_millis(),
+            32,
+        )
+        .to_string();
 
-        let mut proj = Project { variables: vec![], uuid };
+        let mut proj = Project {
+            variables: vec![],
+            uuid,
+        };
 
         for v in p {
             match v {
