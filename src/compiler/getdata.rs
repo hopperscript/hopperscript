@@ -1,4 +1,4 @@
-use ariadne::{sources, ColorGenerator, Fmt, Label, Report, ReportKind};
+use ariadne::{Label, Report, ReportKind, Source, Color, Fmt};
 use rhai::{Array, Engine, Map, Scope};
 
 pub fn generate_data_getter() -> impl Fn(&str, Array, usize, &str) -> Map {
@@ -14,10 +14,18 @@ pub fn generate_data_getter() -> impl Fn(&str, Array, usize, &str) -> Map {
     let scope = Scope::new();
     move |name: &str, args: Array, ln: usize, line: &str| -> Map {
         let val = ngn.call_fn(&mut scope.to_owned(), &ast, name, (args,));
-        if val.is_ok() {
+        if val.is_err() {
             //ariadne error
-            Report::build(ReportKind::Error, "TODO: filename", ln);
-        }
+            
+            println!("{:#?}", val);
+            Report::build(ReportKind::Error, (), 0)
+            .with_message("No such block")
+            .with_label(Label::new(ln..ln+name.len())
+            .with_message(format!("Block \"{}\" not found", name).fg(Color::Red))
+        .with_color(Color::Red))
+            .finish()
+            .print(Source::from(format!("{}{}","\n".repeat(ln),line))).unwrap();panic!();
+        };
         val.unwrap()
     }
 }
