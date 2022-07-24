@@ -1,5 +1,5 @@
-# [insert name here]
+# Hopperscript
 
-I don't think this has to be added to Cargo
+A text language for [Hopscotch](https://gethopscotch.com), written in Rust.
 
-build/run using `cargo r [cli options for the executable]`
+To use the CLI on debug, run `cargo r -- [cli options for the executable]`
