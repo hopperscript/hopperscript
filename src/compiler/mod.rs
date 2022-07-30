@@ -35,7 +35,7 @@ pub mod compiler {
     /// I mean a `str`
     pub fn compile(s: &str) -> Project {
         let (a, errs) = ast().parse_recovery(s);
-        getdata::generate_data_getter();
+        getdata::generate_data();
 
         // very much copied code
         // also very experimental

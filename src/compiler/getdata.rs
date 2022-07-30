@@ -1,13 +1,13 @@
 //use ariadne::{sources, ColorGenerator, Fmt, Label, Report, ReportKind};
 use rhai::{Engine, FnPtr, Scope, Array, AST};
 
-pub struct DataGetterResult {
+pub struct CompiledData {
     pub ast: AST,
     pub obj: Vec<FnPtr>,
     pub eng: Engine
 }
 
-pub fn generate_data_getter() -> DataGetterResult {
+pub fn generate_data() -> CompiledData {
     let mut ngn = Engine::new();
 
     // increase if ExprTooDeep
@@ -21,7 +21,7 @@ pub fn generate_data_getter() -> DataGetterResult {
 
     ngn.run_file_with_scope(&mut scope, "src/compiler/data.rhai".into()).expect("Failed to load block data");
 
-    DataGetterResult {
+    CompiledData {
         obj: scope.get("objects").unwrap().to_owned().into_typed_array::<FnPtr>().unwrap(),
         ast,
         eng: ngn
