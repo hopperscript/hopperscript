@@ -1,3 +1,3 @@
-import "src/compiler/data/blocks";
+import "src/compiler/data/objects";
 
 objects.push(Fn("Square"));

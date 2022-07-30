@@ -6,7 +6,7 @@ pub struct CompiledData {
     pub eng: Engine,
 }
 
-pub fn generate_data() -> CompiledData {
+pub fn generate_data(path: &str) -> CompiledData {
     let mut ngn = Engine::new();
 
     // increase if ExprTooDeep
@@ -17,10 +17,10 @@ pub fn generate_data() -> CompiledData {
     scope.push("objects", Array::new());
 
     let ast = ngn
-        .compile_file_with_scope(&mut scope, "src/compiler/data.rhai".into())
+        .compile_file_with_scope(&mut scope, path.into())
         .expect("Failed to load block data");
 
-    ngn.run_file_with_scope(&mut scope, "src/compiler/data.rhai".into())
+    ngn.run_file_with_scope(&mut scope, path.into())
         .expect("Failed to load block data");
 
     CompiledData {

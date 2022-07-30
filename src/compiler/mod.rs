@@ -35,7 +35,7 @@ pub mod compiler {
     /// I mean a `str`
     pub fn compile(s: &str) -> Project {
         let (a, errs) = ast().parse_recovery(s);
-        getdata::generate_data();
+        getdata::generate_data("src/compiler/data.rhai");
 
         // Report::build(ReportKind::Error, (), 0)
         //.with_message("No such block")
