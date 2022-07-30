@@ -37,6 +37,14 @@ pub mod compiler {
         let (a, errs) = ast().parse_recovery(s);
         getdata::generate_data();
 
+        // Report::build(ReportKind::Error, (), 0)
+        //.with_message("No such block")
+        //.with_label(Label::new(ln..ln+name.len())
+        //.with_message(format!("Block \"{}\" not found", name).fg(Color::Red))
+        //.with_color(Color::Red))
+        //.finish()
+        //.print(Source::from(format!("{}{}","\n".repeat(ln),line))).unwrap();panic!();
+
         // very much copied code
         // also very experimental
         errs.into_iter().for_each(|v| {
