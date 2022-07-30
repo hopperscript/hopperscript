@@ -1,10 +1,3 @@
-fn Square(){
-  #{
-    name: "square",
-    type: 101,
-    filename: "fullSizeSquare.png"
-  }
-}
+import "src/compiler/data/blocks";
 
 objects.push(Fn("Square"));
-objects.push(Fn("Square"))
