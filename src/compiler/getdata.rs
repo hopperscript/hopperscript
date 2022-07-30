@@ -1,31 +1,28 @@
-use ariadne::{Label, Report, ReportKind, Source, Color, Fmt};
-use rhai::{Array, Engine, Map, Scope};
+use rhai::{Engine, FnPtr, Scope, Array, AST};
 
-pub fn generate_data_getter() -> impl Fn(&str, Array, usize, &str) -> Map {
+pub struct CompiledData {
+    pub ast: AST,
+    pub obj: Vec<FnPtr>,
+    pub eng: Engine
+}
+
+pub fn generate_data() -> CompiledData {
     let mut ngn = Engine::new();
 
     // increase if ExprTooDeep
     ngn.set_max_expr_depths(500, 500);
 
-    // file reading needs to be replaced when compiling to wasm
-    let ast = ngn
-        .compile_file("src/compiler/data.rhai".into())
-        .expect("Error while compiling preset data.");
-    let scope = Scope::new();
-    move |name: &str, args: Array, ln: usize, line: &str| -> Map {
-        let val = ngn.call_fn(&mut scope.to_owned(), &ast, name, ("Moveforward",""));
-        if val.is_err() {
-            //ariadne error
-            
-            println!("{:#?}", val);
-            Report::build(ReportKind::Error, (), 0)
-            .with_message("No such block")
-            .with_label(Label::new(ln..ln+name.len())
-            .with_message(format!("Block \"{}\" not found", name).fg(Color::Red))
-        .with_color(Color::Red))
-            .finish()
-            .print(Source::from(format!("{}{}","\n".repeat(ln),line))).unwrap();panic!();
-        };
-        val.unwrap()
+    let mut scope = Scope::new();
+
+    scope.push("objects", Array::new());
+
+    let ast = ngn.compile_file_with_scope(&mut scope, "src/compiler/data.rhai".into()).expect("Failed to load block data");
+
+    ngn.run_file_with_scope(&mut scope, "src/compiler/data.rhai".into()).expect("Failed to load block data");
+
+    CompiledData {
+        obj: scope.get("objects").unwrap().to_owned().into_typed_array::<FnPtr>().unwrap(),
+        ast,
+        eng: ngn
     }
 }

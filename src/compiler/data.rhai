@@ -1,15 +1,10 @@
-/// This file manages json for preset
-/// blocks, objects, operators and
-/// abilities and variables and stuff
-import "src/compiler/data/blocks";
-
-/// this function has no real purpose in life
-fn main(function, args){
-  import "src/compiler/data/blocks";
-  MoveForward();
-  Fn(function).call(args)
+fn Square(){
+  #{
+    name: "square",
+    type: 101,
+    filename: "fullSizeSquare.png"
+  }
 }
 
-fn block(obj){
-  [obj, "object"]
-}
+objects.push(Fn("Square"));
+objects.push(Fn("Square"))
