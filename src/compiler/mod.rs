@@ -6,10 +6,11 @@ pub mod compiler {
     use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
     use chumsky::prelude::*;
     use chumsky::text::ident;
+    use rhai::serde::from_dynamic;
     use std::time::{SystemTime, UNIX_EPOCH};
     use uuid::Uuid;
 
-    use crate::getdata;
+    use crate::getdata::{self, CompiledData};
     use crate::types::{Project, Variable};
 
     fn giv_me_uuid() -> String {
@@ -36,7 +37,6 @@ pub mod compiler {
     /// I mean a `str`
     pub fn compile(s: &str) -> Project {
         let (a, errs) = ast().parse_recovery(s);
-        getdata::generate_data("src/compiler/data.rhai");
 
         // Report::build(ReportKind::Error, (), 0)
         //.with_message("No such block")
@@ -100,7 +100,7 @@ pub mod compiler {
             // panic?
         });
 
-        gen_project(&a.unwrap())
+        gen_project(&a.unwrap(), getdata::generate_data("src/compiler/data.rhai"))
     }
 
     /// Generate the "AST" or whatever
@@ -142,7 +142,7 @@ pub mod compiler {
     }
 
     /// Generate the project
-    fn gen_project(p: &[Script]) -> Project {
+    fn gen_project(p: &[Script], bd: CompiledData) -> Project {
         use radix_fmt::radix;
 
         let uuid = radix(
@@ -157,17 +157,28 @@ pub mod compiler {
         let mut proj = Project {
             variables: vec![],
             uuid,
+            objects: vec![]
         };
 
         for v in p {
             match v {
-                Script::Define { typ, name, val: _ } => {
+                Script::Define { typ, name, val } => {
                     match typ.as_str() {
                         "var" => proj.variables.push(Variable {
                             name: name.to_string(),
                             typ: 8003,
                             object_id_string: giv_me_uuid(),
                         }),
+
+                        "obj" => {
+                            // TODO: use ariadne
+
+                            let f = bd.obj.to_owned().into_iter().find(|v| v.fn_name() == val.as_ref().expect("What object?")).expect("Object not found");
+
+                            let res = f.call(&bd.eng, &bd.ast, ()).expect("Failed to get object");
+
+                            proj.objects.push(from_dynamic(&res).expect("Failed to get object"))
+                        },
 
                         _ => todo!()
                     }

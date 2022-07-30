@@ -1,6 +1,6 @@
 fn Square(){
   #{
-    name: "square",
+    name: "Square",
     type: 101,
     filename: "fullSizeSquare.png"
   }
