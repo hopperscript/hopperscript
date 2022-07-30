@@ -5,6 +5,7 @@ mod types;
 pub mod compiler {
     use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
     use chumsky::prelude::*;
+    use chumsky::text::ident;
     use std::time::{SystemTime, UNIX_EPOCH};
     use uuid::Uuid;
 
@@ -118,11 +119,15 @@ pub mod compiler {
                 val: None,
             });
 
+        let obj_ty = just::<_, _, Simple<char>>("objects")
+            .ignore_then(just('.'))
+            .ignore_then(ident());
+
         let obj = just("object")
             .padded()
             .ignore_then(stri.padded())
             .then_ignore(just('=').padded())
-            .then(stri.padded())
+            .then(obj_ty.padded())
             .map(|(a, c)| Script::Define {
                 typ: "obj".to_string(),
                 name: a,
@@ -157,12 +162,14 @@ pub mod compiler {
         for v in p {
             match v {
                 Script::Define { typ, name, val: _ } => {
-                    if typ == "var" {
-                        proj.variables.push(Variable {
+                    match typ.as_str() {
+                        "var" => proj.variables.push(Variable {
                             name: name.to_string(),
                             typ: 8003,
                             object_id_string: giv_me_uuid(),
-                        })
+                        }),
+
+                        _ => todo!()
                     }
                 }
 
