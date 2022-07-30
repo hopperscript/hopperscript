@@ -13,7 +13,7 @@ pub fn generate_data_getter() -> impl Fn(&str, Array, usize, &str) -> Map {
         .expect("Error while compiling preset data.");
     let scope = Scope::new();
     move |name: &str, args: Array, ln: usize, line: &str| -> Map {
-        let val = ngn.call_fn(&mut scope.to_owned(), &ast, name, (args,));
+        let val = ngn.call_fn(&mut scope.to_owned(), &ast, name, ("Moveforward",""));
         if val.is_err() {
             //ariadne error
             

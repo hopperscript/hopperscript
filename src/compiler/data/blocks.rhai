@@ -1,4 +1,4 @@
-fn MoveForward(args){
+fn MoveForward(){
     block(#{
         "1": "hi"
     })

@@ -36,7 +36,7 @@ pub mod compiler {
     pub fn compile(s: &str) -> Project {
         let (a, errs) = ast().parse_recovery(s);
         let get = getdata::generate_data_getter();
-        get("MoveForward", vec!["0".into()], 9, "MoveForward(50)");
+        get("main", vec!["MoveForward".into(), "f".into()], 9, "MoveForward(50)");
         // very much copied code
         // also very experimental
         errs.into_iter().for_each(|v| {

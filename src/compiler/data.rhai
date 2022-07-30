@@ -4,7 +4,9 @@
 import "src/compiler/data/blocks";
 
 /// this function has no real purpose in life
-fn main(function, args){MoveForward();
+fn main(function, args){
+  import "src/compiler/data/blocks";
+  MoveForward();
   Fn(function).call(args)
 }
 
