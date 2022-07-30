@@ -6,4 +6,5 @@ fn Square(){
   }
 }
 
-registerObject("Square", Fn("Square"))
+objects.push(Fn("Square"));
+objects.push(Fn("Square"))

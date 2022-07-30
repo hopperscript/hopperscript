@@ -1,24 +1,29 @@
 //use ariadne::{sources, ColorGenerator, Fmt, Label, Report, ReportKind};
-use rhai::{Engine, Map, FnPtr, EvalAltResult};
+use rhai::{Engine, FnPtr, Scope, Array, AST};
 
-pub fn generate_data_getter() -> () {
+pub struct DataGetterResult {
+    pub ast: AST,
+    pub obj: Vec<FnPtr>,
+    pub eng: Engine
+}
+
+pub fn generate_data_getter() -> DataGetterResult {
     let mut ngn = Engine::new();
 
     // increase if ExprTooDeep
     ngn.set_max_expr_depths(500, 500);
 
-    let ast = ngn.compile_file("src/compiler/data.rhai".into()).unwrap();
+    let mut scope = Scope::new();
 
-    ngn.register_fn("registerObject", move |name: &str, fun: FnPtr| {
-        let e = Engine::new();
-        let p: Result<Map, Box<EvalAltResult>> = fun.call(&e, &ast, ());
+    scope.push("objects", Array::new());
 
-        println!("{}", name);
-        println!("{:#?}", p);
-    });
+    let ast = ngn.compile_file_with_scope(&mut scope, "src/compiler/data.rhai".into()).expect("Failed to load block data");
 
-    // file reading needs to be replaced when compiling to wasm
-    ngn
-        .run_file("src/compiler/data.rhai".into())
-        .expect("Error while compiling preset data.");
+    ngn.run_file_with_scope(&mut scope, "src/compiler/data.rhai".into()).expect("Failed to load block data");
+
+    DataGetterResult {
+        obj: scope.get("objects").unwrap().to_owned().into_typed_array::<FnPtr>().unwrap(),
+        ast,
+        eng: ngn
+    }
 }
