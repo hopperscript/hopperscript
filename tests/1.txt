@@ -1,2 +1,2 @@
 define var "test" sk
-  define object "idk" = "aaa"
+define object "idk" = objects.hello
