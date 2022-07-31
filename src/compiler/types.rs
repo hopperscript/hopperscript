@@ -24,4 +24,5 @@ pub struct Object {
     pub name: String,
     pub typ: i32,
     pub filename: String,
+    pub id: String
 }
