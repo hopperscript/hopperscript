@@ -175,9 +175,9 @@ pub mod compiler {
 
                             let f = bd.obj.to_owned().into_iter().find(|v| v.fn_name() == val.as_ref().expect("What object?")).expect("Object not found");
 
-                            let id = giv_me_uuid();
+                            let res = f.call(&bd.eng, &bd.ast, ()).expect("Failed to get object");
 
-                            let res = f.call(&bd.eng, &bd.ast, (id,)).expect("Failed to get object");
+                            // get id from res when needed
 
                             proj.objects.push(from_dynamic(&res).expect("Failed to get object"))
                         },

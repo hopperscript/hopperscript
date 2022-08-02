@@ -1,9 +1,14 @@
-use rhai::{Array, Engine, FnPtr, Scope, AST};
+use rhai::{Array, Engine, EvalAltResult, FnPtr, Scope, AST};
+use uuid::Uuid;
 
 pub struct CompiledData {
     pub ast: AST,
     pub obj: Vec<FnPtr>,
     pub eng: Engine,
+}
+
+fn uuid() -> Result<String, Box<EvalAltResult>> {
+    Ok(Uuid::new_v4().to_string())
 }
 
 pub fn generate_data(path: &str) -> CompiledData {
@@ -15,6 +20,8 @@ pub fn generate_data(path: &str) -> CompiledData {
     let mut scope = Scope::new();
 
     scope.push("objects", Array::new());
+
+    ngn.register_result_fn("uuid", uuid);
 
     let ast = ngn
         .compile_file_with_scope(&mut scope, path.into())
