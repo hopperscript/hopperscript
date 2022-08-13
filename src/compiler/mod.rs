@@ -184,6 +184,8 @@ pub mod compiler {
 
                             let res = f.call(&bd.eng, &bd.ast, ()).expect("Failed to get object");
 
+                            // get id from res when needed
+
                             proj.objects.push(from_dynamic(&res).expect("Failed to get object"))
                         },
 
