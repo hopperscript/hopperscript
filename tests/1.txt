@@ -1,2 +1,2 @@
-define var "test" sk
+define var "test \"object\""
 define object "idk" = objects.Square

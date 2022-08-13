@@ -105,10 +105,17 @@ pub mod compiler {
 
     /// Generate the "AST" or whatever
     fn ast() -> impl Parser<char, Vec<Script>, Error = Simple<char>> {
+        let escape = just('\\').ignore_then(
+            just('\\')
+                .or(just('/'))
+                .or(just('"'))
+                .or(just('n').to('\n'))
+                .or(just('t').to('\t'))
+        );
         let stri = just('"')
-            .ignore_then(filter(|c| *c != '"').repeated())
-            .then_ignore(just('"'))
-            .collect::<String>();
+        .ignore_then(filter(|c| *c != '\\' && *c != '"').or(escape).repeated())
+        .then_ignore(just('"'))
+        .collect::<String>();
 
         let var = just("var")
             .padded()
