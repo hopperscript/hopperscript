@@ -1,2 +1,4 @@
 define var "test \"object\""
 define object "idk" = objects.Square
+
+on("a") {a}

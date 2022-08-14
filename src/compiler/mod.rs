@@ -28,6 +28,10 @@ pub mod compiler {
         },
         Str(String),
         Loop(Vec<Self>),
+        On {
+            obj: String,
+            con: String, //probably temporary
+        },
     }
 
     /// The main compile fn
@@ -100,7 +104,12 @@ pub mod compiler {
             // panic?
         });
 
-        gen_project(&a.unwrap(), getdata::generate_data("src/compiler/data.rhai"))
+        println!("{:#?}", a);
+
+        gen_project(
+            &a.unwrap(),
+            getdata::generate_data("src/compiler/data.rhai"),
+        )
     }
 
     /// Generate the "AST" or whatever
@@ -110,12 +119,12 @@ pub mod compiler {
                 .or(just('/'))
                 .or(just('"'))
                 .or(just('n').to('\n'))
-                .or(just('t').to('\t'))
+                .or(just('t').to('\t')),
         );
         let stri = just('"')
-        .ignore_then(filter(|c| *c != '\\' && *c != '"').or(escape).repeated())
-        .then_ignore(just('"'))
-        .collect::<String>();
+            .ignore_then(filter(|c| *c != '\\' && *c != '"').or(escape).repeated())
+            .then_ignore(just('"'))
+            .collect::<String>();
 
         let var = just("var")
             .padded()
@@ -143,13 +152,19 @@ pub mod compiler {
 
         let def = just("define").ignore_then(var.or(obj));
 
-        def.recover_with(skip_then_retry_until([]))
+        let on = just("on")
+            .ignore_then(stri.delimited_by(just('('), just(')')).padded())
+            .then(ident().delimited_by(just('{'), just('}')).padded())
+            .map(|(a, b)| Script::On { obj: a, con: b });
+
+        def.or(on)
+            .recover_with(skip_then_retry_until([]))
             .padded()
             .repeated()
     }
 
     /// Generate the project
-    fn gen_project(p: &[Script], bd: CompiledData) -> Project {
+    fn gen_project(p: &Vec<Script>, bd: CompiledData) -> Project {
         use radix_fmt::radix;
 
         let uuid = radix(
@@ -164,7 +179,7 @@ pub mod compiler {
         let mut proj = Project {
             variables: vec![],
             uuid,
-            objects: vec![]
+            objects: vec![],
         };
 
         for v in p {
@@ -180,16 +195,22 @@ pub mod compiler {
                         "obj" => {
                             // TODO: use ariadne
 
-                            let f = bd.obj.to_owned().into_iter().find(|v| v.fn_name() == val.as_ref().expect("What object?")).expect("Object not found");
+                            let f = bd
+                                .obj
+                                .to_owned()
+                                .into_iter()
+                                .find(|v| v.fn_name() == val.as_ref().expect("What object?"))
+                                .expect("Object not found");
 
                             let res = f.call(&bd.eng, &bd.ast, ()).expect("Failed to get object");
 
                             // get id from res when needed
 
-                            proj.objects.push(from_dynamic(&res).expect("Failed to get object"))
-                        },
+                            proj.objects
+                                .push(from_dynamic(&res).expect("Failed to get object"))
+                        }
 
-                        _ => todo!()
+                        _ => todo!(),
                     }
                 }
 
