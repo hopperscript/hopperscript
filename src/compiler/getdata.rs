@@ -5,10 +5,20 @@ pub struct CompiledData {
     pub ast: AST,
     pub obj: Vec<FnPtr>,
     pub eng: Engine,
+    pub rules: Vec<FnPtr>,
 }
 
 fn uuid() -> Result<String, Box<EvalAltResult>> {
     Ok(Uuid::new_v4().to_string())
+}
+
+fn get_fnptr_list(name: &str, scope: &Scope) -> Vec<FnPtr> {
+    scope
+            .get(name)
+            .unwrap()
+            .to_owned()
+            .into_typed_array::<FnPtr>()
+            .unwrap()
 }
 
 pub fn generate_data(path: &str) -> CompiledData {
@@ -20,6 +30,7 @@ pub fn generate_data(path: &str) -> CompiledData {
     let mut scope = Scope::new();
 
     scope.push("objects", Array::new());
+    scope.push("rules", Array::new());
 
     ngn.register_result_fn("uuid", uuid);
 
@@ -31,12 +42,8 @@ pub fn generate_data(path: &str) -> CompiledData {
         .expect("Failed to load block data");
 
     CompiledData {
-        obj: scope
-            .get("objects")
-            .unwrap()
-            .to_owned()
-            .into_typed_array::<FnPtr>()
-            .unwrap(),
+        obj: get_fnptr_list("objects", &scope),
+        rules: get_fnptr_list("rules", &scope),
         ast,
         eng: ngn,
     }

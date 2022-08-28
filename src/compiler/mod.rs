@@ -180,6 +180,7 @@ pub mod compiler {
             variables: vec![],
             uuid,
             objects: vec![],
+            rules: vec![],
         };
 
         for v in p {
