@@ -30,7 +30,7 @@ pub mod compiler {
         Loop(Vec<Self>),
         On {
             obj: String,
-            con: String, //probably temporary
+            con: Vec<Script>, //probably temporary
         },
     }
 
@@ -154,7 +154,7 @@ pub mod compiler {
 
         let on = just("on")
             .ignore_then(stri.delimited_by(just('('), just(')')).padded())
-            .then(ident().delimited_by(just('{'), just('}')).padded())
+            .then(def.padded().repeated().delimited_by(just('{'), just('}')).padded())
             .map(|(a, b)| Script::On { obj: a, con: b });
 
         def.or(on)
