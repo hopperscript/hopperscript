@@ -1,6 +1,6 @@
 define var "test \"object\""
 define object "idk" = objects.Square
 
-on("a") {
+on( "a") {
   define var "hello"
 }

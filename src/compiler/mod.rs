@@ -153,7 +153,7 @@ pub mod compiler {
         let def = just("define").ignore_then(var.or(obj));
 
         let on = just("on")
-            .ignore_then(stri.delimited_by(just('('), just(')')).padded())
+            .ignore_then(stri.padded().delimited_by(just('('), just(')')).padded())
             .then(def.padded().repeated().delimited_by(just('{'), just('}')).padded())
             .map(|(a, b)| Script::On { obj: a, con: b });
 
