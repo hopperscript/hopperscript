@@ -5,6 +5,7 @@ pub struct CompiledData {
     pub ast: AST,
     pub obj: Vec<FnPtr>,
     pub eng: Engine,
+    pub rules: Vec<FnPtr>,
 }
 
 fn uuid() -> Result<String, Box<EvalAltResult>> {
@@ -20,6 +21,7 @@ pub fn generate_data(path: &str) -> CompiledData {
     let mut scope = Scope::new();
 
     scope.push("objects", Array::new());
+    scope.push("rules", Array::new());
 
     ngn.register_result_fn("uuid", uuid);
 
@@ -33,6 +35,12 @@ pub fn generate_data(path: &str) -> CompiledData {
     CompiledData {
         obj: scope
             .get("objects")
+            .unwrap()
+            .to_owned()
+            .into_typed_array::<FnPtr>()
+            .unwrap(),
+        rules: scope
+            .get("rules")
             .unwrap()
             .to_owned()
             .into_typed_array::<FnPtr>()

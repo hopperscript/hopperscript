@@ -100,7 +100,10 @@ pub mod compiler {
             // panic?
         });
 
-        gen_project(&a.unwrap(), getdata::generate_data("src/compiler/data.rhai"))
+        gen_project(
+            &a.unwrap(),
+            getdata::generate_data("src/compiler/data.rhai"),
+        )
     }
 
     /// Generate the "AST" or whatever
@@ -110,12 +113,12 @@ pub mod compiler {
                 .or(just('/'))
                 .or(just('"'))
                 .or(just('n').to('\n'))
-                .or(just('t').to('\t'))
+                .or(just('t').to('\t')),
         );
         let stri = just('"')
-        .ignore_then(filter(|c| *c != '\\' && *c != '"').or(escape).repeated())
-        .then_ignore(just('"'))
-        .collect::<String>();
+            .ignore_then(filter(|c| *c != '\\' && *c != '"').or(escape).repeated())
+            .then_ignore(just('"'))
+            .collect::<String>();
 
         let var = just("var")
             .padded()
@@ -164,7 +167,8 @@ pub mod compiler {
         let mut proj = Project {
             variables: vec![],
             uuid,
-            objects: vec![]
+            objects: vec![],
+            rules: vec![],
         };
 
         for v in p {
@@ -180,16 +184,22 @@ pub mod compiler {
                         "obj" => {
                             // TODO: use ariadne
 
-                            let f = bd.obj.to_owned().into_iter().find(|v| v.fn_name() == val.as_ref().expect("What object?")).expect("Object not found");
+                            let f = bd
+                                .obj
+                                .to_owned()
+                                .into_iter()
+                                .find(|v| v.fn_name() == val.as_ref().expect("What object?"))
+                                .expect("Object not found");
 
                             let res = f.call(&bd.eng, &bd.ast, ()).expect("Failed to get object");
 
                             // get id from res when needed
 
-                            proj.objects.push(from_dynamic(&res).expect("Failed to get object"))
-                        },
+                            proj.objects
+                                .push(from_dynamic(&res).expect("Failed to get object"))
+                        }
 
-                        _ => todo!()
+                        _ => todo!(),
                     }
                 }
 
