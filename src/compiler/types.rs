@@ -1,9 +1,4 @@
-#[allow(dead_code)]
 use serde::Deserialize;
-
-pub struct Fncall {
-    pub fnname: String,
-}
 
 #[derive(Debug)]
 pub struct Project {
