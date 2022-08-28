@@ -11,7 +11,7 @@ pub mod compiler {
     use uuid::Uuid;
 
     use crate::getdata::{self, CompiledData};
-    use crate::types::{Project, Variable};
+    use crate::types::{Project, Rule, Variable};
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string()
@@ -31,6 +31,10 @@ pub mod compiler {
         On {
             obj: String,
             con: Vec<Script>, //probably temporary
+        },
+        Rule {
+            name: String,
+            con: String, //temp
         },
     }
 
@@ -152,10 +156,21 @@ pub mod compiler {
 
         let def = just("define").ignore_then(var.or(obj));
 
+        let rule = just("when")
+            .ignore_then(ident().padded())
+            .then(ident().or_not().delimited_by(just('{'), just('}')).padded())
+            .map(|(a, mut b)| Script::Rule { name: a, con: b.get_or_insert("".to_string()).to_string() });
+
         let on = just("for")
             .ignore_then(stri.padded())
-            .then(def.padded().repeated().delimited_by(just('{'), just('}')).padded())
-            .map(|(a, b)| Script::On { obj: a, con: b });
+            .then(
+                def.or(rule)
+                    .padded()
+                    .repeated()
+                    .delimited_by(just('{'), just('}'))
+                    .padded().or_not(),
+            )
+            .map(|(a, mut b)| Script::On { obj: a, con: b.get_or_insert(vec![]).to_vec() });
 
         def.or(on)
             .recover_with(skip_then_retry_until([]))
@@ -212,6 +227,22 @@ pub mod compiler {
                         }
 
                         _ => todo!(),
+                    }
+                }
+
+                Script::On { obj: _, con } => {
+                    for v in con {
+                        match v {
+                            Script::Rule { name: _, con: _ } => proj.rules.push(Rule {
+                                rule_block_type: 6000,
+                                object_id: "".to_string(),
+                                id: "".to_string(),
+                                ability_id: "".to_string(),
+                                parameters: vec![],
+                            }),
+
+                            _ => {}
+                        }
                     }
                 }
 

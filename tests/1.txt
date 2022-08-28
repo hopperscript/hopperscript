@@ -3,4 +3,6 @@ define object "idk" = objects.Square
 
 for "a" {
   define var "hello"
+
+  when game_starts {}
 }
