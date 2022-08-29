@@ -1,6 +1,6 @@
-fn Square(){
+fn Square(name){
   #{
-    name: "Square",
+    name: name,
     // rust doesn't support 'type' lol
     typ: 101,
     filename: "fullSizeSquare.png",

@@ -171,7 +171,7 @@ pub mod compiler {
             rules: vec![],
         };
 
-        for v in p {
+        for v in p.to_owned() {
             match v {
                 Script::Define { typ, name, val } => {
                     match typ.as_str() {
@@ -191,7 +191,7 @@ pub mod compiler {
                                 .find(|v| v.fn_name() == val.as_ref().expect("What object?"))
                                 .expect("Object not found");
 
-                            let res = f.call(&bd.eng, &bd.ast, ()).expect("Failed to get object");
+                            let res = f.call(&bd.eng, &bd.ast, (name,)).expect("Failed to get object");
 
                             // get id from res when needed
 
