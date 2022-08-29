@@ -4,15 +4,16 @@ fn Square(name){
     // rust doesn't support 'type' lol
     typ: 101,
     filename: "fullSizeSquare.png",
-    id: uuid()
+    id: uuid(),
+    rules: []
   }
 }
 
-fn game_starts() {
+fn game_starts(obj) {
   #{
     rule_block_type: 6000,
-    object_id: "",
-    id: "",
+    object_id: obj,
+    id: uuid(),
     ability_id: "",
     parameters: []
   }

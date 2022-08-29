@@ -21,9 +21,10 @@ pub struct Object {
     pub typ: i32,
     pub filename: String,
     pub id: String,
+    pub rules: Vec<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Rule {
     pub rule_block_type: i32,
     pub object_id: String,
@@ -32,7 +33,7 @@ pub struct Rule {
     pub parameters: Vec<Param>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Param {
     pub value: String,
     pub typ: i32,
@@ -41,7 +42,7 @@ pub struct Param {
     pub datum: Datum,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Datum {
     pub typ: i32,
     pub block_class: String,

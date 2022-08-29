@@ -11,7 +11,7 @@ pub mod compiler {
     use uuid::Uuid;
 
     use crate::getdata::{self, CompiledData};
-    use crate::types::{Project, Variable};
+    use crate::types::{Project, Rule, Variable};
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string()
@@ -225,7 +225,9 @@ pub mod compiler {
                                 .find(|v| v.fn_name() == val.as_ref().expect("What object?"))
                                 .expect("Object not found");
 
-                            let res = f.call(&bd.eng, &bd.ast, (name,)).expect("Failed to get object");
+                            let res = f
+                                .call(&bd.eng, &bd.ast, (name,))
+                                .expect("Failed to get object");
 
                             // get id from res when needed
 
@@ -237,10 +239,17 @@ pub mod compiler {
                     }
                 }
 
-                Script::On { obj: _, con } => {
+                Script::On { obj, con } => {
                     for v in con {
                         match v {
                             Script::Rule { name, con: _ } => {
+                                let ob = proj
+                                    .objects
+                                    .iter()
+                                    .position(|p| p.name == obj)
+                                    .expect("No object with that name");
+                                let object = proj.objects[ob].to_owned();
+
                                 let f = bd
                                     .rules
                                     .to_owned()
@@ -248,10 +257,16 @@ pub mod compiler {
                                     .find(|v| v.fn_name() == name)
                                     .expect("Rule not found");
 
-                                let res = f.call(&bd.eng, &bd.ast, ()).expect("Failed to get rule");
+                                let res = f
+                                    .call(&bd.eng, &bd.ast, (object.id,))
+                                    .expect("Failed to get rule");
 
-                                proj.rules
-                                    .push(from_dynamic(&res).expect("Failed to get rule"))
+                                let act_res =
+                                    from_dynamic::<Rule>(&res).expect("Failed to get rule");
+
+                                proj.objects[ob].rules.push(act_res.to_owned().id);
+
+                                proj.rules.push(act_res)
                             }
 
                             _ => {}

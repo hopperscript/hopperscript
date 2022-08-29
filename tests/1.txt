@@ -1,7 +1,7 @@
 define var "test \"object\""
 define object "idk" = objects.Square
 
-for "a" {
+for "idk" {
   define var "hello"
 
   when game_starts {}
