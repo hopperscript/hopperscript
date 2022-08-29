@@ -11,7 +11,7 @@ pub mod compiler {
     use uuid::Uuid;
 
     use crate::getdata::{self, CompiledData};
-    use crate::types::{Project, Rule, Variable};
+    use crate::types::{Project, Variable};
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string()
@@ -159,7 +159,10 @@ pub mod compiler {
         let rule = just("when")
             .ignore_then(ident().padded())
             .then(ident().or_not().delimited_by(just('{'), just('}')).padded())
-            .map(|(a, mut b)| Script::Rule { name: a, con: b.get_or_insert("".to_string()).to_string() });
+            .map(|(a, mut b)| Script::Rule {
+                name: a,
+                con: b.get_or_insert("".to_string()).to_string(),
+            });
 
         let on = just("for")
             .ignore_then(stri.padded())
@@ -168,9 +171,13 @@ pub mod compiler {
                     .padded()
                     .repeated()
                     .delimited_by(just('{'), just('}'))
-                    .padded().or_not(),
+                    .padded()
+                    .or_not(),
             )
-            .map(|(a, mut b)| Script::On { obj: a, con: b.get_or_insert(vec![]).to_vec() });
+            .map(|(a, mut b)| Script::On {
+                obj: a,
+                con: b.get_or_insert(vec![]).to_vec(),
+            });
 
         def.or(on)
             .recover_with(skip_then_retry_until([]))
@@ -233,13 +240,19 @@ pub mod compiler {
                 Script::On { obj: _, con } => {
                     for v in con {
                         match v {
-                            Script::Rule { name: _, con: _ } => proj.rules.push(Rule {
-                                rule_block_type: 6000,
-                                object_id: "".to_string(),
-                                id: "".to_string(),
-                                ability_id: "".to_string(),
-                                parameters: vec![],
-                            }),
+                            Script::Rule { name, con: _ } => {
+                                let f = bd
+                                    .rules
+                                    .to_owned()
+                                    .into_iter()
+                                    .find(|v| v.fn_name() == name)
+                                    .expect("Rule not found");
+
+                                let res = f.call(&bd.eng, &bd.ast, ()).expect("Failed to get rule");
+
+                                proj.rules
+                                    .push(from_dynamic(&res).expect("Failed to get rule"))
+                            }
 
                             _ => {}
                         }

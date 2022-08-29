@@ -23,7 +23,7 @@ pub struct Object {
     pub id: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct Rule {
     pub rule_block_type: i32,
     pub object_id: String,
@@ -32,7 +32,7 @@ pub struct Rule {
     pub parameters: Vec<Param>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct Param {
     pub value: String,
     pub typ: i32,
@@ -41,7 +41,7 @@ pub struct Param {
     pub datum: Datum,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct Datum {
     pub typ: i32,
     pub block_class: String,
