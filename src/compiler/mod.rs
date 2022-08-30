@@ -6,6 +6,7 @@ pub mod compiler {
     use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
     use chumsky::prelude::*;
     use chumsky::text::ident;
+    use rhai::Map;
     use rhai::serde::from_dynamic;
     use std::time::{SystemTime, UNIX_EPOCH};
     use uuid::Uuid;
@@ -229,10 +230,14 @@ pub mod compiler {
                                 .call(&bd.eng, &bd.ast, (name,))
                                 .expect("Failed to get object");
 
+                            let mut act_res: Map = from_dynamic(&res).expect("Failed to get object");
+
+                            act_res.insert("rules".into(), (vec![] as Vec<String>).into());
+                            
                             // get id from res when needed
 
                             proj.objects
-                                .push(from_dynamic(&res).expect("Failed to get object"))
+                                .push(from_dynamic(&act_res.into()).expect("Failed to get object"))
                         }
 
                         _ => todo!(),

@@ -15,7 +15,7 @@ pub struct Variable {
     pub object_id_string: String,
 }
 
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct Object {
     pub name: String,
     pub typ: i32,
