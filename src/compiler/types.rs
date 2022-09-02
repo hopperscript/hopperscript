@@ -24,7 +24,7 @@ pub struct Object {
     pub rules: Vec<String>,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Clone)]
 pub struct Rule {
     pub rule_block_type: i32,
     pub object_id: String,

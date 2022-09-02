@@ -6,13 +6,13 @@ pub mod compiler {
     use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
     use chumsky::prelude::*;
     use chumsky::text::ident;
-    use rhai::Map;
     use rhai::serde::from_dynamic;
+    use rhai::Map;
     use std::time::{SystemTime, UNIX_EPOCH};
     use uuid::Uuid;
 
     use crate::getdata::{self, CompiledData};
-    use crate::types::{Project, Rule, Variable};
+    use crate::types::{Param, Project, Rule, Variable};
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string()
@@ -230,10 +230,11 @@ pub mod compiler {
                                 .call(&bd.eng, &bd.ast, (name,))
                                 .expect("Failed to get object");
 
-                            let mut act_res: Map = from_dynamic(&res).expect("Failed to get object");
+                            let mut act_res: Map =
+                                from_dynamic(&res).expect("Failed to get object");
 
                             act_res.insert("rules".into(), (vec![] as Vec<String>).into());
-                            
+
                             // get id from res when needed
 
                             proj.objects
@@ -263,15 +264,23 @@ pub mod compiler {
                                     .expect("Rule not found");
 
                                 let res = f
-                                    .call(&bd.eng, &bd.ast, (object.id,))
+                                    .call(&bd.eng, &bd.ast, (object.to_owned().id,))
                                     .expect("Failed to get rule");
 
                                 let act_res =
-                                    from_dynamic::<Rule>(&res).expect("Failed to get rule");
+                                    from_dynamic::<Vec<Param>>(&res).expect("Failed to get rule");
 
-                                proj.objects[ob].rules.push(act_res.to_owned().id);
+                                let rule = Rule {
+                                    rule_block_type: 6000,
+                                    object_id: object.id,
+                                    id: giv_me_uuid(),
+                                    ability_id: giv_me_uuid(),
+                                    parameters: act_res,
+                                };
 
-                                proj.rules.push(act_res)
+                                proj.objects[ob].rules.push(rule.to_owned().id);
+
+                                proj.rules.push(rule)
                             }
 
                             _ => {}
