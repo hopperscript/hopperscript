@@ -24,5 +24,13 @@ fn game_starts(obj) {
   ]
 }
 
+fn destroy() {
+	#{
+		"block_class": "method",
+		"type": 55,
+		"description": "Destroy"
+	}
+}
+
 objects.push(Fn("Square"));
 rules.push(Fn("game_starts"));

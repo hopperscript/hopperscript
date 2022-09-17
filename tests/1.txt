@@ -4,5 +4,7 @@ define object "idk" = objects.Square
 for "idk" {
   define var "hello"
 
-  when game_starts {}
+  when game_starts {
+    destroy()
+  }
 }

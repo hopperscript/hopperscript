@@ -35,7 +35,10 @@ pub mod compiler {
         },
         Rule {
             name: String,
-            con: String, //temp
+            con: Vec<Script>
+        },
+        Block {
+            name: String,
         },
     }
 
@@ -157,12 +160,16 @@ pub mod compiler {
 
         let def = just("define").ignore_then(var.or(obj));
 
+        let block = ident().then_ignore(just("()")).padded().map(|a| Script::Block {
+            name: a,
+        });
+
         let rule = just("when")
             .ignore_then(ident().padded())
-            .then(ident().or_not().delimited_by(just('{'), just('}')).padded())
+            .then(block.repeated().or_not().delimited_by(just('{'), just('}')).padded())
             .map(|(a, mut b)| Script::Rule {
                 name: a,
-                con: b.get_or_insert("".to_string()).to_string(),
+                con: b.get_or_insert(vec![]).to_vec(),
             });
 
         let on = just("for")
