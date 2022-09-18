@@ -46,7 +46,7 @@ pub fn generate_data(path: &str) -> CompiledData {
     CompiledData {
         obj: get_fnptr_list("objects", &scope),
         rules: get_fnptr_list("rules", &scope),
-        blocks: get_fnptr_list("rules", &scope),
+        blocks: get_fnptr_list("blocks", &scope),
         ast,
         eng: ngn,
     }

@@ -12,7 +12,7 @@ pub mod compiler {
     use uuid::Uuid;
 
     use crate::getdata::{self, CompiledData};
-    use crate::types::{Param, Project, Rule, Variable};
+    use crate::types::{Ability, Param, Project, Rule, Variable, Block};
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string()
@@ -35,11 +35,13 @@ pub mod compiler {
         },
         Rule {
             name: String,
-            con: Vec<Script>
+            con: Vec<BlockAST>,
         },
-        Block {
-            name: String,
-        },
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct BlockAST {
+        pub name: String,
     }
 
     /// The main compile fn
@@ -160,13 +162,20 @@ pub mod compiler {
 
         let def = just("define").ignore_then(var.or(obj));
 
-        let block = ident().then_ignore(just("()")).padded().map(|a| Script::Block {
-            name: a,
-        });
+        let block = ident()
+            .then_ignore(just("()"))
+            .padded()
+            .map(|a| BlockAST { name: a });
 
         let rule = just("when")
             .ignore_then(ident().padded())
-            .then(block.repeated().or_not().delimited_by(just('{'), just('}')).padded())
+            .then(
+                block
+                    .repeated()
+                    .or_not()
+                    .delimited_by(just('{'), just('}'))
+                    .padded(),
+            )
             .map(|(a, mut b)| Script::Rule {
                 name: a,
                 con: b.get_or_insert(vec![]).to_vec(),
@@ -211,6 +220,7 @@ pub mod compiler {
             uuid,
             objects: vec![],
             rules: vec![],
+            abilities: vec![],
         };
 
         for v in p.to_owned() {
@@ -255,7 +265,7 @@ pub mod compiler {
                 Script::On { obj, con } => {
                     for v in con {
                         match v {
-                            Script::Rule { name, con: _ } => {
+                            Script::Rule { name, con } => {
                                 let ob = proj
                                     .objects
                                     .iter()
@@ -277,13 +287,38 @@ pub mod compiler {
                                 let act_res =
                                     from_dynamic::<Vec<Param>>(&res).expect("Failed to get rule");
 
+                                let ability = giv_me_uuid();
+
                                 let rule = Rule {
                                     rule_block_type: 6000,
                                     object_id: object.id,
                                     id: giv_me_uuid(),
-                                    ability_id: giv_me_uuid(),
+                                    ability_id: ability.to_owned(),
                                     parameters: act_res,
                                 };
+
+                                let mut ability_json = Ability {
+                                    abilityID: ability,
+                                    blocks: vec![],
+                                    createdAt: 0,
+                                };
+
+                                for c in con {
+                                    let ptr = bd
+                                        .blocks
+                                        .to_owned()
+                                        .into_iter()
+                                        .find(|v| v.fn_name() == c.name)
+                                        .expect("Block not found");
+
+                                    let call = ptr
+                                        .call(&bd.eng, &bd.ast, ())
+                                        .expect("Failed to get block");
+
+                                    ability_json.blocks.push(from_dynamic::<Block>(&call).expect("Failed to get block"));
+                                }
+
+                                proj.abilities.push(ability_json);
 
                                 proj.objects[ob].rules.push(rule.to_owned().id);
 

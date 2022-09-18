@@ -6,6 +6,7 @@ pub struct Project {
     pub uuid: String,
     pub objects: Vec<Object>,
     pub rules: Vec<Rule>,
+    pub abilities: Vec<Ability>,
 }
 
 #[derive(Debug)]
@@ -46,4 +47,18 @@ pub struct Param {
 pub struct Datum {
     pub typ: i32,
     pub block_class: String,
+}
+
+#[derive(Debug)]
+pub struct Ability {
+    pub abilityID: String,
+    pub blocks: Vec<Block>,
+    pub createdAt: i32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Block {
+    block_class: String,
+    typ: i32,
+    description: String,
 }
