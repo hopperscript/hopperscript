@@ -298,9 +298,9 @@ pub mod compiler {
                                 };
 
                                 let mut ability_json = Ability {
-                                    abilityID: ability,
+                                    ability_id: ability,
                                     blocks: vec![],
-                                    createdAt: 0,
+                                    created_at: 0,
                                 };
 
                                 for c in con {

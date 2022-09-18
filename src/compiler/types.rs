@@ -51,9 +51,9 @@ pub struct Datum {
 
 #[derive(Debug)]
 pub struct Ability {
-    pub abilityID: String,
+    pub ability_id: String,
     pub blocks: Vec<Block>,
-    pub createdAt: i32,
+    pub created_at: i32,
 }
 
 #[derive(Debug, Deserialize)]
