@@ -7,11 +7,12 @@ pub mod compiler {
     use chumsky::prelude::*;
     use chumsky::text::ident;
     use rhai::serde::from_dynamic;
+    use rhai::Map;
     use std::time::{SystemTime, UNIX_EPOCH};
     use uuid::Uuid;
 
     use crate::getdata::{self, CompiledData};
-    use crate::types::{Project, Variable};
+    use crate::types::{Ability, Param, Project, Rule, Variable, Block};
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string()
@@ -28,6 +29,19 @@ pub mod compiler {
         },
         Str(String),
         Loop(Vec<Self>),
+        On {
+            obj: String,
+            con: Vec<Script>, //probably temporary
+        },
+        Rule {
+            name: String,
+            con: Vec<BlockAST>,
+        },
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct BlockAST {
+        pub name: String,
     }
 
     /// The main compile fn
@@ -100,6 +114,8 @@ pub mod compiler {
             // panic?
         });
 
+        println!("{:#?}", a);
+
         gen_project(
             &a.unwrap(),
             getdata::generate_data("src/compiler/data.rhai"),
@@ -146,13 +162,48 @@ pub mod compiler {
 
         let def = just("define").ignore_then(var.or(obj));
 
-        def.recover_with(skip_then_retry_until([]))
+        let block = ident()
+            .then_ignore(just("()"))
+            .padded()
+            .map(|a| BlockAST { name: a });
+
+        let rule = just("when")
+            .ignore_then(ident().padded())
+            .then(
+                block
+                    .repeated()
+                    .or_not()
+                    .delimited_by(just('{'), just('}'))
+                    .padded(),
+            )
+            .map(|(a, mut b)| Script::Rule {
+                name: a,
+                con: b.get_or_insert(vec![]).to_vec(),
+            });
+
+        let on = just("for")
+            .ignore_then(stri.padded())
+            .then(
+                def.or(rule)
+                    .padded()
+                    .repeated()
+                    .delimited_by(just('{'), just('}'))
+                    .padded()
+                    .or_not(),
+            )
+            .map(|(a, mut b)| Script::On {
+                obj: a,
+                con: b.get_or_insert(vec![]).to_vec(),
+            });
+
+        def.or(on)
+            .recover_with(skip_then_retry_until([]))
             .padded()
             .repeated()
     }
 
     /// Generate the project
-    fn gen_project(p: &[Script], bd: CompiledData) -> Project {
+    fn gen_project(p: &Vec<Script>, bd: CompiledData) -> Project {
         use radix_fmt::radix;
 
         let uuid = radix(
@@ -169,6 +220,7 @@ pub mod compiler {
             uuid,
             objects: vec![],
             rules: vec![],
+            abilities: vec![],
         };
 
         for v in p.to_owned() {
@@ -191,15 +243,90 @@ pub mod compiler {
                                 .find(|v| v.fn_name() == val.as_ref().expect("What object?"))
                                 .expect("Object not found");
 
-                            let res = f.call(&bd.eng, &bd.ast, (name,)).expect("Failed to get object");
+                            let res = f
+                                .call(&bd.eng, &bd.ast, (name,))
+                                .expect("Failed to get object");
+
+                            let mut act_res: Map =
+                                from_dynamic(&res).expect("Failed to get object");
+
+                            act_res.insert("rules".into(), (vec![] as Vec<String>).into());
 
                             // get id from res when needed
 
                             proj.objects
-                                .push(from_dynamic(&res).expect("Failed to get object"))
+                                .push(from_dynamic(&act_res.into()).expect("Failed to get object"))
                         }
 
                         _ => todo!(),
+                    }
+                }
+
+                Script::On { obj, con } => {
+                    for v in con {
+                        match v {
+                            Script::Rule { name, con } => {
+                                let ob = proj
+                                    .objects
+                                    .iter()
+                                    .position(|p| p.name == obj)
+                                    .expect("No object with that name");
+                                let object = proj.objects[ob].to_owned();
+
+                                let f = bd
+                                    .rules
+                                    .to_owned()
+                                    .into_iter()
+                                    .find(|v| v.fn_name() == name)
+                                    .expect("Rule not found");
+
+                                let res = f
+                                    .call(&bd.eng, &bd.ast, (object.to_owned().id,))
+                                    .expect("Failed to get rule");
+
+                                let act_res =
+                                    from_dynamic::<Vec<Param>>(&res).expect("Failed to get rule");
+
+                                let ability = giv_me_uuid();
+
+                                let rule = Rule {
+                                    rule_block_type: 6000,
+                                    object_id: object.id,
+                                    id: giv_me_uuid(),
+                                    ability_id: ability.to_owned(),
+                                    parameters: act_res,
+                                };
+
+                                let mut ability_json = Ability {
+                                    ability_id: ability,
+                                    blocks: vec![],
+                                    created_at: 0,
+                                };
+
+                                for c in con {
+                                    let ptr = bd
+                                        .blocks
+                                        .to_owned()
+                                        .into_iter()
+                                        .find(|v| v.fn_name() == c.name)
+                                        .expect("Block not found");
+
+                                    let call = ptr
+                                        .call(&bd.eng, &bd.ast, ())
+                                        .expect("Failed to get block");
+
+                                    ability_json.blocks.push(from_dynamic::<Block>(&call).expect("Failed to get block"));
+                                }
+
+                                proj.abilities.push(ability_json);
+
+                                proj.objects[ob].rules.push(rule.to_owned().id);
+
+                                proj.rules.push(rule)
+                            }
+
+                            _ => {}
+                        }
                     }
                 }
 

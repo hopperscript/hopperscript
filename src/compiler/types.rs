@@ -6,6 +6,7 @@ pub struct Project {
     pub uuid: String,
     pub objects: Vec<Object>,
     pub rules: Vec<Rule>,
+    pub abilities: Vec<Ability>,
 }
 
 #[derive(Debug)]
@@ -15,15 +16,16 @@ pub struct Variable {
     pub object_id_string: String,
 }
 
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct Object {
     pub name: String,
     pub typ: i32,
     pub filename: String,
     pub id: String,
+    pub rules: Vec<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Rule {
     pub rule_block_type: i32,
     pub object_id: String,
@@ -32,7 +34,7 @@ pub struct Rule {
     pub parameters: Vec<Param>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Param {
     pub value: String,
     pub typ: i32,
@@ -41,8 +43,22 @@ pub struct Param {
     pub datum: Datum,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Datum {
     pub typ: i32,
     pub block_class: String,
+}
+
+#[derive(Debug)]
+pub struct Ability {
+    pub ability_id: String,
+    pub blocks: Vec<Block>,
+    pub created_at: i32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Block {
+    block_class: String,
+    typ: i32,
+    description: String,
 }

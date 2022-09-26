@@ -1,2 +1,10 @@
 define var "test \"object\""
 define object "idk" = objects.Square
+
+for "idk" {
+  define var "hello"
+
+  when game_starts {
+    destroy()
+  }
+}

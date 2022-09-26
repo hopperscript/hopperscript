@@ -6,6 +6,7 @@ pub struct CompiledData {
     pub obj: Vec<FnPtr>,
     pub eng: Engine,
     pub rules: Vec<FnPtr>,
+    pub blocks: Vec<FnPtr>,
 }
 
 fn uuid() -> Result<String, Box<EvalAltResult>> {
@@ -31,6 +32,7 @@ pub fn generate_data(path: &str) -> CompiledData {
 
     scope.push("objects", Array::new());
     scope.push("rules", Array::new());
+    scope.push("blocks", Array::new());
 
     ngn.register_result_fn("uuid", uuid);
 
@@ -44,6 +46,7 @@ pub fn generate_data(path: &str) -> CompiledData {
     CompiledData {
         obj: get_fnptr_list("objects", &scope),
         rules: get_fnptr_list("rules", &scope),
+        blocks: get_fnptr_list("blocks", &scope),
         ast,
         eng: ngn,
     }
