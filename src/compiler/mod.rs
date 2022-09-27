@@ -23,6 +23,7 @@ pub mod compiler {
     #[derive(Clone, Debug)]
     pub enum Values {
         Object(String),
+        Str(String),
     }
 
     #[derive(Clone, Debug)]
@@ -305,6 +306,8 @@ pub mod compiler {
                                                 .expect("Object not found")
                                                 .id
                                         }
+
+                                        Values::Str(v) => v,
                                     })
                                     .collect();
 
