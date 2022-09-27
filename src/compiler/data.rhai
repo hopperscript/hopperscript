@@ -24,6 +24,31 @@ fn game_starts(obj) {
   ]
 }
 
+fn is_tapped(o, param) {
+	[
+		#{
+			"default_value": "",
+			"key": "",
+			"datum": #{
+				"block_class": "operator",
+				"typ": 7001,
+				"description": "is Tapped",
+				"params": [
+					#{
+						"default_value": "",
+						"value": "",
+						"key": "",
+						"typ": 50,
+						"variable": param[0]
+					}
+				]
+			},
+			"typ": 52,
+			"value": ""
+		}
+	]
+}
+
 fn destroy() {
 	#{
 		"block_class": "method",
@@ -34,4 +59,5 @@ fn destroy() {
 
 objects.push(Fn("Square"));
 rules.push(Fn("game_starts"));
-blocks.push(Fn("destroy"))
+blocks.push(Fn("destroy"));
+rules.push(Fn("is_tapped"));

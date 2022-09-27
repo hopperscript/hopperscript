@@ -6,7 +6,7 @@ pub mod compiler {
     use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
     use chumsky::prelude::*;
     use chumsky::text::ident;
-    use rhai::serde::from_dynamic;
+    use rhai::serde::{from_dynamic, to_dynamic};
     use rhai::Map;
     use std::time::{SystemTime, UNIX_EPOCH};
     use uuid::Uuid;
@@ -21,13 +21,17 @@ pub mod compiler {
     pub type Span = std::ops::Range<usize>;
 
     #[derive(Clone, Debug)]
+    pub enum Values {
+        Object(String),
+    }
+
+    #[derive(Clone, Debug)]
     pub enum Script {
         Define {
             typ: String,
             name: String,
             val: Option<String>,
         },
-        Str(String),
         Loop(Vec<Self>),
         On {
             obj: String,
@@ -36,6 +40,7 @@ pub mod compiler {
         Rule {
             name: String,
             con: Vec<BlockAST>,
+            params: Vec<Values>,
         },
     }
 
@@ -160,6 +165,8 @@ pub mod compiler {
                 val: Some(c),
             });
 
+        let obj_ref = just('o').ignore_then(stri).map(Values::Object);
+
         let def = just("define").ignore_then(var.or(obj));
 
         let block = ident()
@@ -170,15 +177,22 @@ pub mod compiler {
         let rule = just("when")
             .ignore_then(ident().padded())
             .then(
+                obj_ref
+                    .separated_by(just(','))
+                    .allow_trailing()
+                    .delimited_by(just('('), just(')')),
+            )
+            .then(
                 block
                     .repeated()
                     .or_not()
                     .delimited_by(just('{'), just('}'))
                     .padded(),
             )
-            .map(|(a, mut b)| Script::Rule {
+            .map(|((a, c), mut b)| Script::Rule {
                 name: a,
                 con: b.get_or_insert(vec![]).to_vec(),
+                params: c,
             });
 
         let on = just("for")
@@ -265,7 +279,7 @@ pub mod compiler {
                 Script::On { obj, con } => {
                     for v in con {
                         match v {
-                            Script::Rule { name, con } => {
+                            Script::Rule { name, con, params } => {
                                 let ob = proj
                                     .objects
                                     .iter()
@@ -280,8 +294,26 @@ pub mod compiler {
                                     .find(|v| v.fn_name() == name)
                                     .expect("Rule not found");
 
+                                let transformed: Vec<String> = params
+                                    .into_iter()
+                                    .map(|v| match v {
+                                        Values::Object(v) => {
+                                            proj.objects
+                                                .to_owned()
+                                                .into_iter()
+                                                .find(|i| i.name == v)
+                                                .expect("Object not found")
+                                                .id
+                                        }
+                                    })
+                                    .collect();
+
                                 let res = f
-                                    .call(&bd.eng, &bd.ast, (object.to_owned().id,))
+                                    .call(
+                                        &bd.eng,
+                                        &bd.ast,
+                                        (object.to_owned().id, to_dynamic(transformed).unwrap()),
+                                    )
                                     .expect("Failed to get rule");
 
                                 let act_res =
@@ -294,7 +326,7 @@ pub mod compiler {
                                     object_id: object.id,
                                     id: giv_me_uuid(),
                                     ability_id: ability.to_owned(),
-                                    parameters: act_res,
+                                    params: act_res,
                                 };
 
                                 let mut ability_json = Ability {

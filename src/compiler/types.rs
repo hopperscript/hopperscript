@@ -31,7 +31,7 @@ pub struct Rule {
     pub object_id: String,
     pub id: String,
     pub ability_id: String,
-    pub parameters: Vec<Param>,
+    pub params: Vec<Param>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -40,13 +40,15 @@ pub struct Param {
     pub typ: i32,
     pub default_value: String,
     pub key: String,
-    pub datum: Datum,
+    pub datum: Option<Datum>,
+    pub variable: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Datum {
     pub typ: i32,
     pub block_class: String,
+    pub params: Vec<Param>,
 }
 
 #[derive(Debug)]
