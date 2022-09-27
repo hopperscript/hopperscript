@@ -35,7 +35,7 @@ pub mod compiler {
         Loop(Vec<Self>),
         On {
             obj: String,
-            con: Vec<Script>, //probably temporary
+            con: Vec<Script>,
         },
         Rule {
             name: String,
