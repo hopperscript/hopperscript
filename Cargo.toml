@@ -1,5 +1,4 @@
 [package]
-# TODO: change name
 name = "hopperscript"
 version = "0.1.0"
 edition = "2021"
@@ -11,8 +10,6 @@ path = "src/cli/mod.rs"
 [lib]
 name = "lib"
 path = "src/compiler/mod.rs"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 chumsky = "0.8.0"
