@@ -48,7 +48,7 @@ pub struct Param {
 pub struct Datum {
     pub typ: i32,
     pub block_class: String,
-    pub params: Vec<Param>,
+    pub params: Option<Vec<Param>>,
 }
 
 #[derive(Debug)]
@@ -60,7 +60,8 @@ pub struct Ability {
 
 #[derive(Debug, Deserialize)]
 pub struct Block {
-    block_class: String,
-    typ: i32,
-    description: String,
+    pub block_class: String,
+    pub typ: i32,
+    pub description: String,
+    pub parameters: Option<Vec<Param>>,
 }

@@ -7,7 +7,7 @@ pub mod compiler {
     use chumsky::prelude::*;
     use chumsky::text::ident;
     use rhai::serde::{from_dynamic, to_dynamic};
-    use rhai::Map;
+    use rhai::{Dynamic, Map};
     use std::time::{SystemTime, UNIX_EPOCH};
     use uuid::Uuid;
 
@@ -16,6 +16,28 @@ pub mod compiler {
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string()
+    }
+
+    /// turn `Vec<Values>` to `Vec<String>` to `Dynamic`
+    fn transform_vals(params: Vec<Values>, proj: &Project) -> Dynamic {
+        to_dynamic::<Vec<String>>(
+            params
+                .into_iter()
+                .map(|v| match v {
+                    Values::Object(v) => {
+                        proj.objects
+                            .to_owned()
+                            .into_iter()
+                            .find(|i| i.name == v)
+                            .expect("Object not found")
+                            .id
+                    }
+
+                    Values::Str(v) => v,
+                })
+                .collect(),
+        )
+        .unwrap()
     }
 
     pub type Span = std::ops::Range<usize>;
@@ -48,6 +70,7 @@ pub mod compiler {
     #[derive(Debug, Clone)]
     pub struct BlockAST {
         pub name: String,
+        pub params: Vec<Values>,
     }
 
     /// The main compile fn
@@ -170,10 +193,17 @@ pub mod compiler {
 
         let def = just("define").ignore_then(var.or(obj));
 
+        let value = stri.map(Values::Str).or(obj_ref);
+
         let block = ident()
-            .then_ignore(just("()"))
+            .then(
+                value
+                    .separated_by(just(','))
+                    .allow_trailing()
+                    .delimited_by(just('('), just(')')),
+            )
             .padded()
-            .map(|a| BlockAST { name: a });
+            .map(|(a, b)| BlockAST { name: a, params: b });
 
         let rule = just("when")
             .ignore_then(ident().padded())
@@ -295,28 +325,10 @@ pub mod compiler {
                                     .find(|v| v.fn_name() == name)
                                     .expect("Rule not found");
 
-                                let transformed: Vec<String> = params
-                                    .into_iter()
-                                    .map(|v| match v {
-                                        Values::Object(v) => {
-                                            proj.objects
-                                                .to_owned()
-                                                .into_iter()
-                                                .find(|i| i.name == v)
-                                                .expect("Object not found")
-                                                .id
-                                        }
-
-                                        Values::Str(v) => v,
-                                    })
-                                    .collect();
+                                let transformed = transform_vals(params, &proj);
 
                                 let res = f
-                                    .call(
-                                        &bd.eng,
-                                        &bd.ast,
-                                        (object.to_owned().id, to_dynamic(transformed).unwrap()),
-                                    )
+                                    .call(&bd.eng, &bd.ast, (object.to_owned().id, transformed))
                                     .expect("Failed to get rule");
 
                                 let act_res =
@@ -346,8 +358,10 @@ pub mod compiler {
                                         .find(|v| v.fn_name() == c.name)
                                         .expect("Block not found");
 
+                                    let transformed = transform_vals(c.params, &proj);
+
                                     let call = ptr
-                                        .call(&bd.eng, &bd.ast, ())
+                                        .call(&bd.eng, &bd.ast, (transformed,))
                                         .expect("Failed to get block");
 
                                     ability_json.blocks.push(
