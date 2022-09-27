@@ -371,9 +371,3 @@ pub mod compiler {
         proj
     }
 }
-
-// for later use:
-
-// fn to_fncall(n: String) -> Fncall {
-//     Fncall { fnname: n }
-// }
