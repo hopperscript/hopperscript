@@ -12,7 +12,7 @@ pub mod compiler {
     use uuid::Uuid;
 
     use crate::getdata::{self, CompiledData};
-    use crate::types::{Ability, Param, Project, Rule, Variable, Block};
+    use crate::types::{Ability, Block, Param, Project, Rule, Variable};
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string()
@@ -315,7 +315,9 @@ pub mod compiler {
                                         .call(&bd.eng, &bd.ast, ())
                                         .expect("Failed to get block");
 
-                                    ability_json.blocks.push(from_dynamic::<Block>(&call).expect("Failed to get block"));
+                                    ability_json.blocks.push(
+                                        from_dynamic::<Block>(&call).expect("Failed to get block"),
+                                    );
                                 }
 
                                 proj.abilities.push(ability_json);

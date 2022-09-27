@@ -15,11 +15,11 @@ fn uuid() -> Result<String, Box<EvalAltResult>> {
 
 fn get_fnptr_list(name: &str, scope: &Scope) -> Vec<FnPtr> {
     scope
-            .get(name)
-            .unwrap()
-            .to_owned()
-            .into_typed_array::<FnPtr>()
-            .unwrap()
+        .get(name)
+        .unwrap()
+        .to_owned()
+        .into_typed_array::<FnPtr>()
+        .unwrap()
 }
 
 pub fn generate_data(path: &str) -> CompiledData {
