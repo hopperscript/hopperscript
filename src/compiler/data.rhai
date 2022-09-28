@@ -58,22 +58,18 @@ fn destroy(par) {
 }
 
 fn move_forward(par) {
-	let i = #{
+	#{
 		"block_class": "method",
 		"typ": 23,
 		"description": "Move Forward",
 		"parameters": [
-			#{
+			paramset(par[0], #{
 				"default_value": "",
 				"key": "",
 				"typ": 57
-			}
+			})
 		]
-	};
-
-	i.parameters[0] = paramset(par[0], i.parameters[0]);
-
-	i
+	}
 }
 
 objects.push(Fn("Square"));
