@@ -26,34 +26,43 @@ pub mod compiler {
                 .into_iter()
                 .map(|v| match v {
                     Values::Object(v) => Value {
-                        value: Some(
-                            proj.objects
-                                .to_owned()
-                                .into_iter()
-                                .find(|i| i.name == v)
-                                .expect("Object not found")
-                                .id,
-                        ),
+                        value: proj
+                            .objects
+                            .to_owned()
+                            .into_iter()
+                            .find(|i| i.name == v)
+                            .expect("Object not found")
+                            .id,
                         datum: None,
                     },
 
                     Values::Str(v) => Value {
-                        value: Some(v),
+                        value: v,
                         datum: None,
                     },
 
-                    Values::Variable(v) => Value {
-                        value: None,
-                        datum: Some(
-                            to_dynamic(Datum {
-                                variable: Some(v),
-                                typ: 8003,
-                                block_class: None,
-                                params: None,
-                            })
-                            .unwrap(),
-                        ),
-                    },
+                    Values::Variable(v) => {
+                        let var = proj
+                            .variables
+                            .to_owned()
+                            .into_iter()
+                            .find(|p| p.name == v)
+                            .unwrap()
+                            .object_id_string;
+
+                        Value {
+                            value: "".to_string(),
+                            datum: Some(
+                                to_dynamic(Datum {
+                                    variable: Some(var),
+                                    typ: 8003,
+                                    block_class: None,
+                                    params: None,
+                                })
+                                .unwrap(),
+                            ),
+                        }
+                    }
                 })
                 .collect(),
         )
@@ -96,7 +105,7 @@ pub mod compiler {
 
     #[derive(Serialize, Deserialize)]
     pub struct Value {
-        pub value: Option<String>,
+        pub value: String,
         pub datum: Option<Dynamic>,
     }
 

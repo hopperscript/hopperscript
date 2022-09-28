@@ -6,6 +6,7 @@ for "idk" {
 
   when game_starts() {
     move_forward("20")
+    move_forward(v"test \"object\"")
   }
 
   when is_tapped(o"idk") {

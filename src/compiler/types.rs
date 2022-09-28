@@ -9,7 +9,7 @@ pub struct Project {
     pub abilities: Vec<Ability>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Variable {
     pub name: String,
     pub typ: i32,

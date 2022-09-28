@@ -31,9 +31,7 @@ fn paramset(value: Dynamic, mut map: Map) -> Result<Map, Box<EvalAltResult>> {
         map.insert("datum".into(), to_dynamic(val.datum).unwrap());
     }
     
-    if val.value.is_some() {
-        map.insert("value".into(), to_dynamic(val.value).unwrap());
-    }
+    map.insert("value".into(), to_dynamic(val.value).unwrap());
 
     Ok(map)
 }
