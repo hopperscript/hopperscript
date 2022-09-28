@@ -1,5 +1,7 @@
-use rhai::{Array, Engine, EvalAltResult, FnPtr, Scope, AST};
+use rhai::{Array, Engine, EvalAltResult, FnPtr, Scope, AST, Map, serde::{to_dynamic, from_dynamic}, Dynamic};
 use uuid::Uuid;
+
+use crate::compiler::Value;
 
 pub struct CompiledData {
     pub ast: AST,
@@ -22,6 +24,20 @@ fn get_fnptr_list(name: &str, scope: &Scope) -> Vec<FnPtr> {
         .unwrap()
 }
 
+fn paramset(value: Dynamic, mut map: Map) -> Result<Map, Box<EvalAltResult>> {
+    let val: Value = from_dynamic(&value).unwrap();
+
+    if val.datum.is_some() {
+        map.insert("datum".into(), to_dynamic(val.datum).unwrap());
+    }
+    
+    if val.value.is_some() {
+        map.insert("value".into(), to_dynamic(val.value).unwrap());
+    }
+
+    Ok(map)
+}
+
 pub fn generate_data(path: &str) -> CompiledData {
     let mut ngn = Engine::new();
 
@@ -33,6 +49,8 @@ pub fn generate_data(path: &str) -> CompiledData {
     scope.push("objects", Array::new());
     scope.push("rules", Array::new());
     scope.push("blocks", Array::new());
+
+    ngn.register_result_fn("paramset", paramset);
 
     ngn.register_result_fn("uuid", uuid);
 

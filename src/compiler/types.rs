@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 pub struct Project {
@@ -34,7 +34,7 @@ pub struct Rule {
     pub params: Vec<Param>,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct Param {
     pub value: String,
     pub typ: i32,
@@ -44,11 +44,12 @@ pub struct Param {
     pub variable: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct Datum {
     pub typ: i32,
-    pub block_class: String,
+    pub block_class: Option<String>,
     pub params: Option<Vec<Param>>,
+    pub variable: Option<String>,
 }
 
 #[derive(Debug)]

@@ -8,11 +8,12 @@ pub mod compiler {
     use chumsky::text::ident;
     use rhai::serde::{from_dynamic, to_dynamic};
     use rhai::{Dynamic, Map};
+    use serde::{Deserialize, Serialize};
     use std::time::{SystemTime, UNIX_EPOCH};
     use uuid::Uuid;
 
     use crate::getdata::{self, CompiledData};
-    use crate::types::{Ability, Block, Param, Project, Rule, Variable};
+    use crate::types::{Ability, Block, Datum, Param, Project, Rule, Variable};
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string()
@@ -20,20 +21,39 @@ pub mod compiler {
 
     /// turn `Vec<Values>` to `Vec<String>` to `Dynamic`
     fn transform_vals(params: Vec<Values>, proj: &Project) -> Dynamic {
-        to_dynamic::<Vec<String>>(
+        to_dynamic::<Vec<Value>>(
             params
                 .into_iter()
                 .map(|v| match v {
-                    Values::Object(v) => {
-                        proj.objects
-                            .to_owned()
-                            .into_iter()
-                            .find(|i| i.name == v)
-                            .expect("Object not found")
-                            .id
-                    }
+                    Values::Object(v) => Value {
+                        value: Some(
+                            proj.objects
+                                .to_owned()
+                                .into_iter()
+                                .find(|i| i.name == v)
+                                .expect("Object not found")
+                                .id,
+                        ),
+                        datum: None,
+                    },
 
-                    Values::Str(v) => v,
+                    Values::Str(v) => Value {
+                        value: Some(v),
+                        datum: None,
+                    },
+
+                    Values::Variable(v) => Value {
+                        value: None,
+                        datum: Some(
+                            to_dynamic(Datum {
+                                variable: Some(v),
+                                typ: 8003,
+                                block_class: None,
+                                params: None,
+                            })
+                            .unwrap(),
+                        ),
+                    },
                 })
                 .collect(),
         )
@@ -46,6 +66,7 @@ pub mod compiler {
     pub enum Values {
         Object(String),
         Str(String),
+        Variable(String),
     }
 
     #[derive(Clone, Debug)]
@@ -71,6 +92,12 @@ pub mod compiler {
     pub struct BlockAST {
         pub name: String,
         pub params: Vec<Values>,
+    }
+
+    #[derive(Serialize, Deserialize)]
+    pub struct Value {
+        pub value: Option<String>,
+        pub datum: Option<Dynamic>,
     }
 
     /// The main compile fn
@@ -190,10 +217,11 @@ pub mod compiler {
             });
 
         let obj_ref = just('o').ignore_then(stri).map(Values::Object);
+        let var_ref = just('v').ignore_then(stri).map(Values::Variable);
 
         let def = just("define").ignore_then(var.or(obj));
 
-        let value = stri.map(Values::Str).or(obj_ref);
+        let value = stri.map(Values::Str).or(obj_ref).or(var_ref);
 
         let block = ident()
             .then(

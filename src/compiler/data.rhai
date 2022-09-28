@@ -39,7 +39,7 @@ fn is_tapped(o, param) {
 						"value": "",
 						"key": "",
 						"typ": 50,
-						"variable": param[0]
+						"variable": param[0].value
 					}
 				]
 			},
@@ -58,19 +58,22 @@ fn destroy(par) {
 }
 
 fn move_forward(par) {
-	#{
+	let i = #{
 		"block_class": "method",
 		"typ": 23,
 		"description": "Move Forward",
 		"parameters": [
 			#{
-				"value": par[0],
 				"default_value": "",
 				"key": "",
 				"typ": 57
 			}
 		]
-	}
+	};
+
+	i.parameters[0] = paramset(par[0], i.parameters[0]);
+
+	i
 }
 
 objects.push(Fn("Square"));
