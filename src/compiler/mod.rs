@@ -294,7 +294,7 @@ pub mod compiler {
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .expect("Can't generate UUID for some reason")
-                .as_millis() * 65536,
+                .as_millis() / 1000 * 65536,
             36,
         )
         .to_string();
