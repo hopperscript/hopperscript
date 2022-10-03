@@ -1,4 +1,4 @@
-//Convert struct Project into json
+//Convert `Project` struct into JSON
 use crate::{types::{Project}};
 use serde_json::{json, Value};
 
@@ -34,6 +34,8 @@ pub fn to_json(prj: Project) -> Value{
         "in_moderation": false,
         "remote_asset_urls": []
       });
+
+      //Objects
       prj.objects.iter().for_each(|h|{
         let ln = json["objects"].as_array().unwrap().len();
         json["objects"].as_array_mut().unwrap().push(json!({}));
@@ -43,6 +45,7 @@ pub fn to_json(prj: Project) -> Value{
         obj["filename"] = h.filename.clone().into();
         obj["objectID"] = h.id.clone().into();
         obj["type"] = h.typ.clone().into();
+        obj["rules"] = h.rules.clone().into();
       });
       return json;
 }
