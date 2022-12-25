@@ -181,7 +181,7 @@ pub mod compiler {
             // panic?
         });
 
-        println!("{:#?}", a);
+        // println!("{:#?}", a);
 
         gen_project(
             &a.unwrap(),
