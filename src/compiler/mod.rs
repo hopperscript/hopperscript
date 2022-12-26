@@ -15,7 +15,7 @@ pub mod compiler {
 
     pub use crate::export::to_json;
     use crate::getdata::{self, CompiledData};
-    use crate::types::{Ability, Block, Datum, Param, Project, Rule, Scene, Variable, EventParam};
+    use crate::types::{Ability, Block, Datum, EventParam, Param, Project, Rule, Scene, Variable};
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string().to_uppercase()
@@ -352,10 +352,18 @@ pub mod compiler {
                                     .to_string(),
                             );
                             proj.event_params.push(EventParam {
-                                description: act_res.get("name").expect("Failed to add object").to_string(),
+                                description: act_res
+                                    .get("name")
+                                    .expect("Failed to add object")
+                                    .to_string(),
                                 block_type: 8000,
                                 id: giv_me_uuid(),
-                                object_id: Some(act_res.get("id").expect("Failed to add object").to_string()),
+                                object_id: Some(
+                                    act_res
+                                        .get("objectID")
+                                        .expect("Failed to add object")
+                                        .to_string(),
+                                ),
                             });
                             proj.objects
                                 .push(from_dynamic(&act_res.into()).expect("Failed to get object"))
@@ -386,7 +394,15 @@ pub mod compiler {
                                 let transformed = transform_vals(params, &proj);
 
                                 let res = f
-                                    .call(&bd.eng, &bd.ast, (object.to_owned().id, transformed))
+                                    .call(
+                                        &bd.eng,
+                                        &bd.ast,
+                                        (
+                                            object.to_owned().id,
+                                            transformed,
+                                            to_dynamic(&proj).unwrap(),
+                                        ),
+                                    )
                                     .expect("Failed to get rule");
 
                                 let act_res =

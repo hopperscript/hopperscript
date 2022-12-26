@@ -10,7 +10,7 @@ fn Square(name){
   }
 }
 
-fn game_starts(o, par) {
+fn game_starts(o, par, proj) {
   [
 	  #{
 		  datum: #{
@@ -26,7 +26,7 @@ fn game_starts(o, par) {
   ]
 }
 
-fn is_tapped(o, param) {
+fn is_tapped(o, param, proj) {
 	[
 		#{
 			"defaultValue": "",
@@ -41,7 +41,7 @@ fn is_tapped(o, param) {
 						"value": "",
 						"key": "",
 						"type": 50,
-						"variable": param[0].value
+						"variable": proj.eventParameters.drain(|v| v.objectID == param[0].value)[0].id
 					}
 				]
 			},

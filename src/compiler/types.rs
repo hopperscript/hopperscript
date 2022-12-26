@@ -8,14 +8,17 @@ pub struct Project {
     pub rules: Vec<Rule>,
     pub abilities: Vec<Ability>,
     pub scenes: Vec<Scene>,
+    #[serde(rename = "eventParameters")]
     pub event_params: Vec<EventParam>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct EventParam {
     pub id: String,
     pub description: String,
+    #[serde(rename = "blockType")]
     pub block_type: i32,
+    #[serde(rename = "objectID")]
     pub object_id: Option<String>,
 }
 

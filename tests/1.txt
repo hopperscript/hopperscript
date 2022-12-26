@@ -1,5 +1,6 @@
 define var "test \"object\""
 define object "idk" = objects.Square
+define object "more" = objects.Square
 
 for "idk" {
   define var "hello"
@@ -9,7 +10,7 @@ for "idk" {
     move_forward(v"test \"object\"")
   }
 
-  when is_tapped(o"idk") {
+  when is_tapped(o"more") {
     destroy()
   }
 }

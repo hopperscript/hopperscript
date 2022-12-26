@@ -1,4 +1,7 @@
-use rhai::{Array, Engine, EvalAltResult, FnPtr, Scope, AST, Map, serde::{to_dynamic, from_dynamic}, Dynamic};
+use rhai::{
+    serde::{from_dynamic, to_dynamic},
+    Array, Dynamic, Engine, EvalAltResult, FnPtr, Map, Scope, AST,
+};
 use uuid::Uuid;
 
 use crate::compiler::Value;
@@ -12,7 +15,7 @@ pub struct CompiledData {
 }
 
 fn uuid() -> Result<String, Box<EvalAltResult>> {
-    Ok(Uuid::new_v4().to_string())
+    Ok(Uuid::new_v4().to_string().to_uppercase())
 }
 
 fn get_fnptr_list(name: &str, scope: &Scope) -> Vec<FnPtr> {
@@ -30,7 +33,7 @@ fn paramset(value: Dynamic, mut map: Map) -> Result<Map, Box<EvalAltResult>> {
     if val.datum.is_some() {
         map.insert("datum".into(), to_dynamic(val.datum).unwrap());
     }
-    
+
     map.insert("value".into(), to_dynamic(val.value).unwrap());
 
     Ok(map)
