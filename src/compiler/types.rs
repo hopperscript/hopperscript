@@ -7,6 +7,13 @@ pub struct Project {
     pub objects: Vec<Object>,
     pub rules: Vec<Rule>,
     pub abilities: Vec<Ability>,
+    pub scenes: Vec<Scene>,
+}
+
+#[derive(Debug)]
+pub struct Scene {
+    pub name: String,
+    pub objects: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
