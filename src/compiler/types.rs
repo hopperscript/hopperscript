@@ -10,7 +10,7 @@ pub struct Project {
     pub scenes: Vec<Scene>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Scene {
     pub name: String,
     pub objects: Vec<String>,
