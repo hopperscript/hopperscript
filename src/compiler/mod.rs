@@ -15,7 +15,7 @@ pub mod compiler {
 
     pub use crate::export::to_json;
     use crate::getdata::{self, CompiledData};
-    use crate::types::{Ability, Block, Datum, Param, Project, Rule, Scene, Variable};
+    use crate::types::{Ability, Block, Datum, Param, Project, Rule, Scene, Variable, EventParam};
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string().to_uppercase()
@@ -311,6 +311,7 @@ pub mod compiler {
                 name: "My Scene".to_string(),
                 objects: vec![],
             }],
+            event_params: vec![],
         };
 
         for v in p.to_owned() {
@@ -350,6 +351,12 @@ pub mod compiler {
                                     .expect("Failed to insert object to scene")
                                     .to_string(),
                             );
+                            proj.event_params.push(EventParam {
+                                description: act_res.get("name").expect("Failed to add object").to_string(),
+                                block_type: 8000,
+                                id: giv_me_uuid(),
+                                object_id: Some(act_res.get("id").expect("Failed to add object").to_string()),
+                            });
                             proj.objects
                                 .push(from_dynamic(&act_res.into()).expect("Failed to get object"))
                         }
