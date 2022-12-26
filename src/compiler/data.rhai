@@ -4,7 +4,9 @@ fn Square(name){
     // rust doesn't support 'type' lol
     type: 101,
     filename: "fullSizeSquare.png",
-    id: uuid()
+    objectID: uuid(),
+		xPosition: 1,
+		yPosition: 1, //TODO
   }
 }
 

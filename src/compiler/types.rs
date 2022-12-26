@@ -31,8 +31,13 @@ pub struct Object {
     #[serde(rename = "type")]
     pub typ: i32,
     pub filename: String,
+    #[serde(rename = "objectID")]
     pub id: String,
     pub rules: Vec<String>,
+    #[serde(rename = "xPosition")]
+    pub x: i32,
+    #[serde(rename = "yPosition")]
+    pub y: i32,
 }
 
 #[derive(Debug, Clone, Serialize)]

@@ -18,7 +18,7 @@ pub mod compiler {
     use crate::types::{Ability, Block, Datum, Param, Project, Rule, Scene, Variable};
 
     fn giv_me_uuid() -> String {
-        Uuid::new_v4().to_string()
+        Uuid::new_v4().to_string().to_uppercase()
     }
 
     /// turn `Vec<Values>` to `Vec<String>` to `Dynamic`
@@ -346,7 +346,7 @@ pub mod compiler {
 
                             proj.scenes[0].objects.push(
                                 act_res
-                                    .get("id")
+                                    .get("objectID")
                                     .expect("Failed to insert object to scene")
                                     .to_string(),
                             );
