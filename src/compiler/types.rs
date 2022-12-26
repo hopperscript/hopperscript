@@ -14,6 +14,7 @@ pub struct Variable {
     pub name: String,
     #[serde(rename = "type")]
     pub typ: i32,
+    #[serde(rename = "objectIdString")]
     pub object_id_string: String,
 }
 
@@ -29,10 +30,14 @@ pub struct Object {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Rule {
+    #[serde(rename = "ruleBlockType")]
     pub rule_block_type: i32,
+    #[serde(rename = "objectID")]
     pub object_id: String,
     pub id: String,
+    #[serde(rename = "abilityID")]
     pub ability_id: String,
+    #[serde(rename = "parameters")]
     pub params: Vec<Param>,
 }
 
@@ -41,6 +46,7 @@ pub struct Param {
     pub value: String,
     #[serde(rename = "type")]
     pub typ: i32,
+    #[serde(rename = "defaultValue")]
     pub default_value: String,
     pub key: String,
     pub datum: Option<Datum>,
@@ -51,21 +57,23 @@ pub struct Param {
 pub struct Datum {
     #[serde(rename = "type")]
     pub typ: i32,
-    pub block_class: Option<String>,
-    pub params: Option<Vec<Param>>,
+    pub block_class: Option<String>, // not camelcase
+    pub params: Option<Vec<Param>>,  // keep 'params'
     pub variable: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct Ability {
+    #[serde(rename = "abilityID")]
     pub ability_id: String,
     pub blocks: Vec<Block>,
+    #[serde(rename = "createdAt")]
     pub created_at: i32,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Block {
-    pub block_class: String,
+    pub block_class: String, // not camelcase
     #[serde(rename = "type")]
     pub typ: i32,
     pub description: String,
