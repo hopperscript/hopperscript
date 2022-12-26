@@ -8,6 +8,15 @@ pub struct Project {
     pub rules: Vec<Rule>,
     pub abilities: Vec<Ability>,
     pub scenes: Vec<Scene>,
+    pub event_params: Vec<EventParam>,
+}
+
+#[derive(Debug)]
+pub struct EventParam {
+    pub id: String,
+    pub description: String,
+    pub block_type: i32,
+    pub object_id: Option<String>,
 }
 
 #[derive(Debug)]
