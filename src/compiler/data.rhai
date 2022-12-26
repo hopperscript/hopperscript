@@ -16,7 +16,7 @@ fn game_starts(o, par) {
 			  block_class: "operator",
 			  description: "Game Starts"
 		  },
-		  default_value: "",
+		  defaultValue: "",
 		  value: "",
 		  type: 52,
 		  key: ""
@@ -27,7 +27,7 @@ fn game_starts(o, par) {
 fn is_tapped(o, param) {
 	[
 		#{
-			"default_value": "",
+			"defaultValue": "",
 			"key": "",
 			"datum": #{
 				"block_class": "operator",
@@ -35,7 +35,7 @@ fn is_tapped(o, param) {
 				"description": "is Tapped",
 				"params": [
 					#{
-						"default_value": "",
+						"defaultValue": "",
 						"value": "",
 						"key": "",
 						"type": 50,
@@ -64,7 +64,7 @@ fn move_forward(par) {
 		"description": "Move Forward",
 		"parameters": [
 			paramset(par[0], #{
-				"default_value": "",
+				"defaultValue": "",
 				"key": "",
 				"type": 57
 			})
