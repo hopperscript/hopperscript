@@ -1,6 +1,6 @@
+mod export;
 mod getdata;
 mod types;
-mod export;
 
 /// Main module for the compiler
 pub mod compiler {
@@ -13,9 +13,9 @@ pub mod compiler {
     use std::time::{SystemTime, UNIX_EPOCH};
     use uuid::Uuid;
 
+    pub use crate::export::to_json;
     use crate::getdata::{self, CompiledData};
     use crate::types::{Ability, Block, Datum, Param, Project, Rule, Variable};
-    pub use crate::export::to_json;
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string()
@@ -294,7 +294,9 @@ pub mod compiler {
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .expect("Can't generate UUID for some reason")
-                .as_millis() / 1000 * 65536,
+                .as_millis()
+                / 1000
+                * 65536,
             36,
         )
         .to_string();
