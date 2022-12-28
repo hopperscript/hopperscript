@@ -1,3 +1,4 @@
+mod export;
 mod getdata;
 mod types;
 
@@ -12,11 +13,12 @@ pub mod compiler {
     use std::time::{SystemTime, UNIX_EPOCH};
     use uuid::Uuid;
 
+    pub use crate::export::to_json;
     use crate::getdata::{self, CompiledData};
-    use crate::types::{Ability, Block, Datum, Param, Project, Rule, Scene, Variable, EventParam};
+    use crate::types::{Ability, Block, Datum, EventParam, Param, Project, Rule, Scene, Variable};
 
     fn giv_me_uuid() -> String {
-        Uuid::new_v4().to_string()
+        Uuid::new_v4().to_string().to_uppercase()
     }
 
     /// turn `Vec<Values>` to `Vec<String>` to `Dynamic`
@@ -179,7 +181,7 @@ pub mod compiler {
             // panic?
         });
 
-        println!("{:#?}", a);
+        // println!("{:#?}", a);
 
         gen_project(
             &a.unwrap(),
@@ -292,8 +294,10 @@ pub mod compiler {
             SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .expect("Can't generate UUID for some reason")
-                .as_millis(),
-            32,
+                .as_millis()
+                / 1000
+                * 65536,
+            36,
         )
         .to_string();
 
@@ -343,15 +347,23 @@ pub mod compiler {
 
                             proj.scenes[0].objects.push(
                                 act_res
-                                    .get("id")
+                                    .get("objectID")
                                     .expect("Failed to insert object to scene")
                                     .to_string(),
                             );
                             proj.event_params.push(EventParam {
-                                description: act_res.get("name").expect("Failed to add object").to_string(),
+                                description: act_res
+                                    .get("name")
+                                    .expect("Failed to add object")
+                                    .to_string(),
                                 block_type: 8000,
                                 id: giv_me_uuid(),
-                                object_id: Some(act_res.get("id").expect("Failed to add object").to_string()),
+                                object_id: Some(
+                                    act_res
+                                        .get("objectID")
+                                        .expect("Failed to add object")
+                                        .to_string(),
+                                ),
                             });
                             proj.objects
                                 .push(from_dynamic(&act_res.into()).expect("Failed to get object"))
@@ -382,7 +394,15 @@ pub mod compiler {
                                 let transformed = transform_vals(params, &proj);
 
                                 let res = f
-                                    .call(&bd.eng, &bd.ast, (object.to_owned().id, transformed))
+                                    .call(
+                                        &bd.eng,
+                                        &bd.ast,
+                                        (
+                                            object.to_owned().id,
+                                            transformed,
+                                            to_dynamic(&proj).unwrap(),
+                                        ),
+                                    )
                                     .expect("Failed to get rule");
 
                                 let act_res =

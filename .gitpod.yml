@@ -4,6 +4,5 @@
 
 tasks:
   - init: cargo build
-    command: cargo watch -x run
 
 

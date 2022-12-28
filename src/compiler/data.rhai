@@ -2,48 +2,50 @@ fn Square(name){
   #{
     name: name,
     // rust doesn't support 'type' lol
-    typ: 101,
+    type: 101,
     filename: "fullSizeSquare.png",
-    id: uuid()
+    objectID: uuid(),
+		xPosition: 1,
+		yPosition: 1, //TODO
   }
 }
 
-fn game_starts(o, par) {
+fn game_starts(o, par, proj) {
   [
 	  #{
 		  datum: #{
-			  typ: 7000,
+			  type: 7000,
 			  block_class: "operator",
 			  description: "Game Starts"
 		  },
-		  default_value: "",
+		  defaultValue: "",
 		  value: "",
-		  typ: 52,
+		  type: 52,
 		  key: ""
 	  }
   ]
 }
 
-fn is_tapped(o, param) {
+fn is_tapped(o, param, proj) {
 	[
 		#{
-			"default_value": "",
+			"defaultValue": "",
 			"key": "",
 			"datum": #{
 				"block_class": "operator",
-				"typ": 7001,
+				"type": 7001,
 				"description": "is Tapped",
 				"params": [
 					#{
-						"default_value": "",
+						"defaultValue": "",
 						"value": "",
 						"key": "",
-						"typ": 50,
-						"variable": param[0].value
+						"type": 50,
+						"variable": proj.eventParameters.drain(|v| v.objectID == param[0].value)[0].id
 					}
 				]
 			},
-			"typ": 52,
+			"type": 52,
 			"value": ""
 		}
 	]
@@ -52,7 +54,7 @@ fn is_tapped(o, param) {
 fn destroy(par) {
 	#{
 		"block_class": "method",
-		"typ": 55,
+		"type": 55,
 		"description": "Destroy"
 	}
 }
@@ -60,13 +62,13 @@ fn destroy(par) {
 fn move_forward(par) {
 	#{
 		"block_class": "method",
-		"typ": 23,
+		"type": 23,
 		"description": "Move Forward",
 		"parameters": [
 			paramset(par[0], #{
-				"default_value": "",
+				"defaultValue": "",
 				"key": "",
-				"typ": 57
+				"type": 57
 			})
 		]
 	}
