@@ -11,11 +11,16 @@ pub mod compiler {
     use rhai::{Dynamic, Map};
     use serde::{Deserialize, Serialize};
     use std::time::{SystemTime, UNIX_EPOCH};
+    use std::vec;
     use uuid::Uuid;
 
     pub use crate::export::to_json;
     use crate::getdata::{self, CompiledData};
-    use crate::types::{Ability, Block, Datum, EventParam, Param, Project, Rule, Scene, Variable};
+    use crate::types::{
+        Ability, Block, Datum, EventParam, Object, Param, Project, Rule, Scene, Variable,
+    };
+
+    extern crate regex;
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string().to_uppercase()
@@ -183,10 +188,7 @@ pub mod compiler {
 
         // println!("{:#?}", a);
 
-        gen_project(
-            &a.unwrap(),
-            getdata::generate_data("src/compiler/data.rhai"),
-        )
+        gen_project(&a.unwrap(), getdata::generate_data("src/compiler/std.yaml"))
     }
 
     /// Generate the "AST" or whatever
@@ -328,45 +330,30 @@ pub mod compiler {
                             // TODO: use ariadne
 
                             let f = bd
-                                .obj
-                                .to_owned()
-                                .into_iter()
-                                .find(|v| v.fn_name() == val.as_ref().expect("What object?"))
-                                .expect("Object not found");
+                                .objects
+                                .get(val.as_ref().expect("What object?"))
+                                .expect("Object not found(?)");
 
-                            let res = f
-                                .call(&bd.eng, &bd.ast, (name,))
-                                .expect("Failed to get object");
+                            let id = giv_me_uuid();
 
-                            let mut act_res: Map =
-                                from_dynamic(&res).expect("Failed to get object");
+                            let obj = Object {
+                                typ: f.typ,
+                                filename: f.filename.to_owned(),
+                                name: name.clone(),
+                                id: id.clone(),
+                                rules: vec![],
+                                x: 1,
+                                y: 1,
+                            };
 
-                            act_res.insert("rules".into(), (vec![] as Vec<String>).into());
-
-                            // get id from res when needed
-
-                            proj.scenes[0].objects.push(
-                                act_res
-                                    .get("objectID")
-                                    .expect("Failed to insert object to scene")
-                                    .to_string(),
-                            );
+                            proj.scenes[0].objects.push(id.clone());
                             proj.event_params.push(EventParam {
-                                description: act_res
-                                    .get("name")
-                                    .expect("Failed to add object")
-                                    .to_string(),
+                                description: name,
                                 block_type: 8000,
                                 id: giv_me_uuid(),
-                                object_id: Some(
-                                    act_res
-                                        .get("objectID")
-                                        .expect("Failed to add object")
-                                        .to_string(),
-                                ),
+                                object_id: Some(id),
                             });
-                            proj.objects
-                                .push(from_dynamic(&act_res.into()).expect("Failed to get object"))
+                            proj.objects.push(obj)
                         }
 
                         _ => todo!(),
@@ -374,48 +361,41 @@ pub mod compiler {
                 }
 
                 Script::On { obj, con } => {
+                    let ob = proj
+                        .objects
+                        .iter()
+                        .position(|p| p.name == obj)
+                        .expect("No object with that name");
+
+                    let object = proj.objects[ob].to_owned();
+
                     for v in con {
                         match v {
                             Script::Rule { name, con, params } => {
-                                let ob = proj
-                                    .objects
-                                    .iter()
-                                    .position(|p| p.name == obj)
-                                    .expect("No object with that name");
-                                let object = proj.objects[ob].to_owned();
-
-                                let f = bd
-                                    .rules
-                                    .to_owned()
-                                    .into_iter()
-                                    .find(|v| v.fn_name() == name)
-                                    .expect("Rule not found");
-
-                                let transformed = transform_vals(params, &proj);
-
-                                let res = f
-                                    .call(
-                                        &bd.eng,
-                                        &bd.ast,
-                                        (
-                                            object.to_owned().id,
-                                            transformed,
-                                            to_dynamic(&proj).unwrap(),
-                                        ),
-                                    )
-                                    .expect("Failed to get rule");
-
-                                let act_res =
-                                    from_dynamic::<Vec<Param>>(&res).expect("Failed to get rule");
+                                let rule = bd.rules.get(&name).expect("Rule not found.");
 
                                 let ability = giv_me_uuid();
 
-                                let rule = Rule {
+                                let id = giv_me_uuid();
+
+                                let r = Rule {
                                     rule_block_type: 6000,
-                                    object_id: object.id,
-                                    id: giv_me_uuid(),
+                                    object_id: object.to_owned().id,
+                                    id: id.clone(),
                                     ability_id: ability.to_owned(),
-                                    params: act_res,
+                                    params: vec![Param {
+                                        datum: rule.datum.to_owned().or(Some(Datum {
+                                            typ: rule.typ.expect("For some reason, there's a problem with the block data."),
+                                            params: None,
+                                            block_class: Some("operator".to_string()),
+                                            variable: None,
+                                        })),
+                                        value: "".to_string(),
+                                        typ: 52,
+                                        key: "".to_string(),
+                                        default_value: "".to_string(),
+                                        variable: None,
+                                    }],
                                 };
 
                                 let mut ability_json = Ability {
@@ -425,29 +405,23 @@ pub mod compiler {
                                 };
 
                                 for c in con {
-                                    let ptr = bd
-                                        .blocks
-                                        .to_owned()
-                                        .into_iter()
-                                        .find(|v| v.fn_name() == c.name)
-                                        .expect("Block not found");
+                                    let ptr = bd.blocks.get(&c.name).expect("Block not found.");
 
-                                    let transformed = transform_vals(c.params, &proj);
+                                    let block = Block {
+                                        block_class: "method".to_string(),
+                                        typ: ptr.typ,
+                                        description: ptr.description.to_owned(),
+                                        parameters: None,
+                                    };
 
-                                    let call = ptr
-                                        .call(&bd.eng, &bd.ast, (transformed,))
-                                        .expect("Failed to get block");
-
-                                    ability_json.blocks.push(
-                                        from_dynamic::<Block>(&call).expect("Failed to get block"),
-                                    );
+                                    ability_json.blocks.push(block);
                                 }
 
                                 proj.abilities.push(ability_json);
 
-                                proj.objects[ob].rules.push(rule.to_owned().id);
+                                proj.objects[ob].rules.push(id);
 
-                                proj.rules.push(rule)
+                                proj.rules.push(r)
                             }
 
                             _ => {}

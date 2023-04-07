@@ -1,0 +1,24 @@
+objects:
+  Square:
+    type: 101
+    filename: fullSizeSquare.png
+rules:
+  game_starts:
+    type: 7000
+    description: Game Starts
+  is_tapped:
+    description: Is Tapped
+    args:
+      - object
+    datum:
+      type: 7001
+      params:
+        - variable: "{arg0}"
+          type: 50
+          value: ""
+          defaultValue: ""
+          key: ""
+blocks:
+  destroy:
+    type: 55
+    description: Destroy
