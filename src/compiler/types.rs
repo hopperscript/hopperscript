@@ -84,6 +84,7 @@ pub struct Datum {
     pub block_class: Option<String>, // not camelcase
     pub params: Option<Vec<Param>>,  // keep 'params'
     pub variable: Option<String>,
+    pub object: Option<String>,
 }
 
 #[derive(Debug, Serialize)]

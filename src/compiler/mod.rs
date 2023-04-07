@@ -60,6 +60,7 @@ pub mod compiler {
                                     typ: 8003,
                                     block_class: None,
                                     params: None,
+                                    object: None,
                                 })
                                 .unwrap(),
                             ),
