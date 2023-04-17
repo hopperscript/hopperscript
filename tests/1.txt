@@ -2,12 +2,18 @@ define var "test \"object\""
 define object "idk" = objects.Square
 define object "more" = objects.Square
 
+define ability "hmm(os)" {
+  move_forward("20")
+}
+
 for "idk" {
   define var "hello"
 
   when game_starts() {
     move_forward("20")
     move_forward(v"test \"object\"")
+
+    ability!("hmm(os)")
   }
 
   when is_tapped(o"more") {

@@ -15,7 +15,9 @@ pub mod compiler {
 
     pub use crate::export::to_json;
     use crate::getdata::{self, CompiledData};
-    use crate::types::{Ability, Block, Datum, EventParam, Param, Project, Rule, Scene, Variable};
+    use crate::types::{
+        Ability, Block, ControlScript, Datum, EventParam, Param, Project, Rule, Scene, Variable,
+    };
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string().to_uppercase()
@@ -81,11 +83,17 @@ pub mod compiler {
     }
 
     #[derive(Clone, Debug)]
+    pub enum DefineTypes {
+        Object(String),
+        Variable,
+        Ability(Option<Vec<BlockAST>>),
+    }
+
+    #[derive(Clone, Debug)]
     pub enum Script {
         Define {
-            typ: String,
+            typ: DefineTypes,
             name: String,
-            val: Option<String>,
         },
         Loop(Vec<Self>),
         On {
@@ -99,10 +107,17 @@ pub mod compiler {
         },
     }
 
+    #[derive(Debug, Clone, PartialEq)]
+    pub enum AstTypes {
+        Block,
+        Ability,
+    }
+
     #[derive(Debug, Clone)]
     pub struct BlockAST {
         pub name: String,
         pub params: Vec<Values>,
+        pub typ: AstTypes,
     }
 
     #[derive(Serialize, Deserialize)]
@@ -203,13 +218,42 @@ pub mod compiler {
             .then_ignore(just('"'))
             .collect::<String>();
 
+        let obj_ref = just('o').ignore_then(stri).map(Values::Object);
+        let var_ref = just('v').ignore_then(stri).map(Values::Variable);
+
+        let value = stri.map(Values::Str).or(obj_ref).or(var_ref);
+
+        let abil = just("ability!")
+            .ignore_then(stri.delimited_by(just('('), just(')')))
+            .padded()
+            .map(|v| BlockAST {
+                name: v,
+                params: vec![],
+                typ: AstTypes::Ability,
+            });
+
+        let block = ident()
+            .then(
+                value
+                    .separated_by(just(','))
+                    .allow_trailing()
+                    .delimited_by(just('('), just(')')),
+            )
+            .padded()
+            .map(|(a, b)| BlockAST {
+                name: a,
+                params: b,
+                typ: AstTypes::Block,
+            });
+
+        let block_or_abil = block.or(abil);
+
         let var = just("var")
             .padded()
-            .then(stri.padded())
-            .map(|(a, b)| Script::Define {
-                typ: a.to_string(),
+            .ignore_then(stri.padded())
+            .map(|b| Script::Define {
+                typ: DefineTypes::Variable,
                 name: b,
-                val: None,
             });
 
         let obj_ty = just::<_, _, Simple<char>>("objects")
@@ -222,27 +266,26 @@ pub mod compiler {
             .then_ignore(just('=').padded())
             .then(obj_ty.padded())
             .map(|(a, c)| Script::Define {
-                typ: "obj".to_string(),
+                typ: DefineTypes::Object(c),
                 name: a,
-                val: Some(c),
             });
 
-        let obj_ref = just('o').ignore_then(stri).map(Values::Object);
-        let var_ref = just('v').ignore_then(stri).map(Values::Variable);
-
-        let def = just("define").ignore_then(var.or(obj));
-
-        let value = stri.map(Values::Str).or(obj_ref).or(var_ref);
-
-        let block = ident()
-            .then(
-                value
-                    .separated_by(just(','))
-                    .allow_trailing()
-                    .delimited_by(just('('), just(')')),
-            )
+        let ability_def = just("ability")
             .padded()
-            .map(|(a, b)| BlockAST { name: a, params: b });
+            .ignore_then(stri.padded())
+            .then(
+                block_or_abil
+                    .repeated()
+                    .or_not()
+                    .delimited_by(just('{'), just('}'))
+                    .padded(),
+            )
+            .map(|(a, c)| Script::Define {
+                typ: DefineTypes::Ability(c),
+                name: a,
+            });
+
+        let def = just("define").ignore_then(var.or(obj.or(ability_def)));
 
         let rule = just("when")
             .ignore_then(ident().padded())
@@ -253,7 +296,7 @@ pub mod compiler {
                     .delimited_by(just('('), just(')')),
             )
             .then(
-                block
+                block_or_abil
                     .repeated()
                     .or_not()
                     .delimited_by(just('{'), just('}'))
@@ -316,22 +359,22 @@ pub mod compiler {
 
         for v in p.to_owned() {
             match v {
-                Script::Define { typ, name, val } => {
-                    match typ.as_str() {
-                        "var" => proj.variables.push(Variable {
+                Script::Define { typ, name } => {
+                    match typ {
+                        DefineTypes::Variable => proj.variables.push(Variable {
                             name: name.to_string(),
                             typ: 8003,
                             object_id_string: giv_me_uuid(),
                         }),
 
-                        "obj" => {
+                        DefineTypes::Object(val) => {
                             // TODO: use ariadne
 
                             let f = bd
                                 .obj
                                 .to_owned()
                                 .into_iter()
-                                .find(|v| v.fn_name() == val.as_ref().expect("What object?"))
+                                .find(|v| v.fn_name() == val)
                                 .expect("Object not found");
 
                             let res = f
@@ -369,7 +412,37 @@ pub mod compiler {
                                 .push(from_dynamic(&act_res.into()).expect("Failed to get object"))
                         }
 
-                        _ => todo!(),
+                        DefineTypes::Ability(mut blocks) => {
+                            let id = giv_me_uuid();
+
+                            let mut ability_json = Ability {
+                                ability_id: id,
+                                blocks: vec![],
+                                created_at: 0,
+                                name: Some(name),
+                            };
+
+                            for c in blocks.get_or_insert(vec![]) {
+                                let ptr = bd
+                                    .blocks
+                                    .to_owned()
+                                    .into_iter()
+                                    .find(|v| v.fn_name() == c.name)
+                                    .expect("Block not found");
+
+                                let transformed = transform_vals(c.params.to_owned(), &proj);
+
+                                let call = ptr
+                                    .call(&bd.eng, &bd.ast, (transformed,))
+                                    .expect("Failed to get block");
+
+                                ability_json.blocks.push(
+                                    from_dynamic::<Block>(&call).expect("Failed to get block"),
+                                );
+                            }
+
+                            proj.abilities.push(ability_json)
+                        } //_ => todo!(),
                     }
                 }
 
@@ -422,25 +495,49 @@ pub mod compiler {
                                     ability_id: ability,
                                     blocks: vec![],
                                     created_at: 0,
+                                    name: None,
                                 };
 
                                 for c in con {
-                                    let ptr = bd
-                                        .blocks
-                                        .to_owned()
-                                        .into_iter()
-                                        .find(|v| v.fn_name() == c.name)
-                                        .expect("Block not found");
+                                    if c.typ == AstTypes::Block {
+                                        let ptr = bd
+                                            .blocks
+                                            .to_owned()
+                                            .into_iter()
+                                            .find(|v| v.fn_name() == c.name)
+                                            .expect("Block not found");
 
-                                    let transformed = transform_vals(c.params, &proj);
+                                        let transformed = transform_vals(c.params, &proj);
 
-                                    let call = ptr
-                                        .call(&bd.eng, &bd.ast, (transformed,))
-                                        .expect("Failed to get block");
+                                        let call = ptr
+                                            .call(&bd.eng, &bd.ast, (transformed,))
+                                            .expect("Failed to get block");
 
-                                    ability_json.blocks.push(
-                                        from_dynamic::<Block>(&call).expect("Failed to get block"),
-                                    );
+                                        ability_json.blocks.push(
+                                            from_dynamic::<Block>(&call)
+                                                .expect("Failed to get block"),
+                                        );
+                                    } else {
+                                        let ability = proj
+                                            .abilities
+                                            .clone()
+                                            .into_iter()
+                                            .find(|v| {
+                                                v.name.as_ref().expect("Rule not found?") == &c.name
+                                            })
+                                            .expect("Rule not found")
+                                            .ability_id;
+
+                                        ability_json.blocks.push(Block {
+                                            typ: 123,
+                                            description: c.name,
+                                            control_script: Some(ControlScript {
+                                                ability_id: ability.to_owned(),
+                                            }),
+                                            block_class: "control".to_string(),
+                                            parameters: None,
+                                        });
+                                    }
                                 }
 
                                 proj.abilities.push(ability_json);
