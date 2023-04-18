@@ -86,20 +86,29 @@ pub struct Datum {
     pub variable: Option<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct Ability {
     #[serde(rename = "abilityID")]
     pub ability_id: String,
     pub blocks: Vec<Block>,
     #[serde(rename = "createdAt")]
     pub created_at: i32,
+    pub name: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct ControlScript {
+    #[serde(rename = "abilityID")]
+    pub ability_id: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Block {
     pub block_class: String, // not camelcase
     #[serde(rename = "type")]
     pub typ: i32,
     pub description: String,
     pub parameters: Option<Vec<Param>>,
+    #[serde(rename = "controlScript")]
+    pub control_script: Option<ControlScript>,
 }
