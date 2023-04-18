@@ -358,6 +358,53 @@ pub mod compiler {
         };
 
         for v in p.to_owned() {
+            fn convert_to_block(
+                c: &BlockAST,
+                bd: &CompiledData,
+                ability_json: &mut Ability,
+                proj: &Project,
+            ) {
+                if c.typ == AstTypes::Block {
+                    let ptr = bd
+                        .blocks
+                        .to_owned()
+                        .into_iter()
+                        .find(|v| v.fn_name() == c.name)
+                        .expect("Block not found");
+
+                    let transformed = transform_vals(c.params.clone(), &proj);
+
+                    let call = ptr
+                        .call(&bd.eng, &bd.ast, (transformed,))
+                        .expect("Failed to get block");
+
+                    ability_json
+                        .blocks
+                        .push(from_dynamic::<Block>(&call).expect("Failed to get block"));
+                } else {
+                    let ability = if &c.name == ability_json.name.get_or_insert("".to_string()) {
+                        ability_json.ability_id.clone()
+                    } else {
+                        proj.abilities
+                            .clone()
+                            .into_iter()
+                            .find(|v| v.name.as_ref().expect("Rule not found?") == &c.name)
+                            .expect("Ability not found")
+                            .ability_id
+                    };
+
+                    ability_json.blocks.push(Block {
+                        typ: 123,
+                        description: c.name.clone(),
+                        control_script: Some(ControlScript {
+                            ability_id: ability,
+                        }),
+                        block_class: "control".to_string(),
+                        parameters: None,
+                    });
+                }
+            }
+
             match v {
                 Script::Define { typ, name } => {
                     match typ {
@@ -423,22 +470,7 @@ pub mod compiler {
                             };
 
                             for c in blocks.get_or_insert(vec![]) {
-                                let ptr = bd
-                                    .blocks
-                                    .to_owned()
-                                    .into_iter()
-                                    .find(|v| v.fn_name() == c.name)
-                                    .expect("Block not found");
-
-                                let transformed = transform_vals(c.params.to_owned(), &proj);
-
-                                let call = ptr
-                                    .call(&bd.eng, &bd.ast, (transformed,))
-                                    .expect("Failed to get block");
-
-                                ability_json.blocks.push(
-                                    from_dynamic::<Block>(&call).expect("Failed to get block"),
-                                );
+                                convert_to_block(&c, &bd, &mut ability_json, &proj);
                             }
 
                             proj.abilities.push(ability_json)
@@ -499,45 +531,7 @@ pub mod compiler {
                                 };
 
                                 for c in con {
-                                    if c.typ == AstTypes::Block {
-                                        let ptr = bd
-                                            .blocks
-                                            .to_owned()
-                                            .into_iter()
-                                            .find(|v| v.fn_name() == c.name)
-                                            .expect("Block not found");
-
-                                        let transformed = transform_vals(c.params, &proj);
-
-                                        let call = ptr
-                                            .call(&bd.eng, &bd.ast, (transformed,))
-                                            .expect("Failed to get block");
-
-                                        ability_json.blocks.push(
-                                            from_dynamic::<Block>(&call)
-                                                .expect("Failed to get block"),
-                                        );
-                                    } else {
-                                        let ability = proj
-                                            .abilities
-                                            .clone()
-                                            .into_iter()
-                                            .find(|v| {
-                                                v.name.as_ref().expect("Rule not found?") == &c.name
-                                            })
-                                            .expect("Rule not found")
-                                            .ability_id;
-
-                                        ability_json.blocks.push(Block {
-                                            typ: 123,
-                                            description: c.name,
-                                            control_script: Some(ControlScript {
-                                                ability_id: ability.to_owned(),
-                                            }),
-                                            block_class: "control".to_string(),
-                                            parameters: None,
-                                        });
-                                    }
+                                    convert_to_block(&c, &bd, &mut ability_json, &proj);
                                 }
 
                                 proj.abilities.push(ability_json);

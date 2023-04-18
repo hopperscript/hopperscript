@@ -4,6 +4,8 @@ define object "more" = objects.Square
 
 define ability "hmm(os)" {
   move_forward("20")
+
+  ability!("hmm(os)")
 }
 
 for "idk" {
