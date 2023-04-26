@@ -79,6 +79,7 @@ pub mod compiler {
         Object(String),
         Str(String),
         Variable(String),
+        ObjectVariable(Vec<String>),
     }
 
     #[derive(Clone, Debug)]
@@ -230,10 +231,11 @@ pub mod compiler {
 
         let obj_ref = just('o').ignore_then(stri).map(Values::Object);
         let var_ref = just('v').ignore_then(stri).map(Values::Variable);
+        let objvar_ref = just('v').ignore_then(stri).ignore_then(just('.')).ignore_then(stri).map(Values::ObjectVariable);
 
         let def = just("define").ignore_then(var.or(obj));
 
-        let value = stri.map(Values::Str).or(obj_ref).or(var_ref);
+        let value = stri.map(Values::Str).or(obj_ref).or(var_ref).or(objvar_ref);
 
         let block = ident()
             .then(
