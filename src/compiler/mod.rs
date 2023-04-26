@@ -66,6 +66,8 @@ pub mod compiler {
                             ),
                         }
                     }
+
+                    
                 })
                 .collect(),
         )
@@ -79,7 +81,7 @@ pub mod compiler {
         Object(String),
         Str(String),
         Variable(String),
-        ObjectVariable(Vec<String>),
+        ObjectVariable(String, String),
     }
 
     #[derive(Clone, Debug)]
@@ -231,7 +233,7 @@ pub mod compiler {
 
         let obj_ref = just('o').ignore_then(stri).map(Values::Object);
         let var_ref = just('v').ignore_then(stri).map(Values::Variable);
-        let objvar_ref = just('v').ignore_then(stri).ignore_then(just('.')).ignore_then(stri).map(Values::ObjectVariable);
+        let objvar_ref = just('v').ignore_then(stri).then_ignore(just('.')).then(stri).map(|(obj,var)|Values::ObjectVariable(obj, var));
 
         let def = just("define").ignore_then(var.or(obj));
 
