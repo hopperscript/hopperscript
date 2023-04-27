@@ -65,9 +65,39 @@ pub mod compiler {
                                 .unwrap(),
                             ),
                         }
+                    },
+                    Values::ObjectVariable(o, v) =>{
+                        //copy-paste
+                        let var = proj
+                            .variables
+                            .to_owned()
+                            .into_iter()
+                            .find(|p| p.name == v)
+                            .unwrap()
+                            .object_id_string;
+                        let obj = proj
+                            .objects
+                            .to_owned()
+                            .into_iter()
+                            .find(|p| p.name == o)
+                            .unwrap()
+                            .name;
+
+                        Value{
+                            value: "".to_string(),
+                            datum: Some(
+                                to_dynamic(Datum{
+                                    variable: Some(var),
+                                    typ: 8003,
+                                    block_class: None,
+                                    params: None,
+                                    object: Some(obj),
+                                })
+                                .unwrap()
+                            )
+                        }
                     }
 
-                    
                 })
                 .collect(),
         )
@@ -230,7 +260,6 @@ pub mod compiler {
                 name: a,
                 val: Some(c),
             });
-
         let obj_ref = just('o').ignore_then(stri).map(Values::Object);
         let var_ref = just('v').ignore_then(stri).map(Values::Variable);
         let objvar_ref = just('v').ignore_then(stri).then_ignore(just('.')).then(stri).map(|(obj,var)|Values::ObjectVariable(obj, var));
