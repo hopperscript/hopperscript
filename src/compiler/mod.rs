@@ -66,6 +66,7 @@ pub mod compiler {
                             ),
                         }
                     },
+                    
                     Values::ObjectVariable(o, v) =>{
                         //copy-paste
                         let var = proj
@@ -266,7 +267,7 @@ pub mod compiler {
 
         let def = just("define").ignore_then(var.or(obj));
 
-        let value = stri.map(Values::Str).or(obj_ref).or(var_ref).or(objvar_ref);
+        let value = stri.map(Values::Str).or(obj_ref).or(objvar_ref).or(var_ref);
 
         let block = ident()
             .then(
