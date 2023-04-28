@@ -121,6 +121,7 @@ pub mod compiler {
             typ: String,
             name: String,
             val: Option<String>,
+            code: i32
         },
         Loop(Vec<Self>),
         On {
@@ -245,6 +246,7 @@ pub mod compiler {
                 typ: a.to_string(),
                 name: b,
                 val: None,
+                code: 3
             });
 
         let obj_ty = just::<_, _, Simple<char>>("objects")
@@ -260,10 +262,12 @@ pub mod compiler {
                 typ: "obj".to_string(),
                 name: a,
                 val: Some(c),
+                code: 0
             });
         let obj_ref = just('o').ignore_then(stri).map(Values::Object);
         let var_ref = just('v').ignore_then(stri).map(Values::Variable);
         let objvar_ref = just('v').ignore_then(stri).then_ignore(just('.')).then(stri).map(|(obj,var)|Values::ObjectVariable(obj, var));
+        let selfvar_ref = just("v Self.").ignore_then(stri).map(Values::Variable);
 
         let def = just("define").ignore_then(var.or(obj));
 
@@ -351,11 +355,11 @@ pub mod compiler {
 
         for v in p.to_owned() {
             match v {
-                Script::Define { typ, name, val } => {
+                Script::Define { typ, name, val, code } => {
                     match typ.as_str() {
                         "var" => proj.variables.push(Variable {
                             name: name.to_string(),
-                            typ: 8003,
+                            typ: 8000+code,
                             object_id_string: giv_me_uuid(),
                         }),
 
