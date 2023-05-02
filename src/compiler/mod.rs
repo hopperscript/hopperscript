@@ -43,7 +43,7 @@ pub mod compiler {
                         datum: None,
                     },
 
-                    Values::Variable(v) => {
+                    Values::Variable(v, code) => {
                         let var = proj
                             .variables
                             .to_owned()
@@ -57,7 +57,7 @@ pub mod compiler {
                             datum: Some(
                                 to_dynamic(Datum {
                                     variable: Some(var),
-                                    typ: 8003,
+                                    typ: 8000 + code,
                                     block_class: None,
                                     params: None,
                                     object: None,
@@ -82,14 +82,14 @@ pub mod compiler {
                             .into_iter()
                             .find(|p| p.name == o)
                             .unwrap()
-                            .name;
+                            .id;
 
                         Value{
                             value: "".to_string(),
                             datum: Some(
                                 to_dynamic(Datum{
                                     variable: Some(var),
-                                    typ: 8003,
+                                    typ: 8000,
                                     block_class: None,
                                     params: None,
                                     object: Some(obj),
@@ -111,7 +111,7 @@ pub mod compiler {
     pub enum Values {
         Object(String),
         Str(String),
-        Variable(String),
+        Variable(String, i32),
         ObjectVariable(String, String),
     }
 
@@ -265,13 +265,13 @@ pub mod compiler {
                 code: 0
             });
         let obj_ref = just('o').ignore_then(stri).map(Values::Object);
-        let var_ref = just('v').ignore_then(stri).map(Values::Variable);
+        let var_ref = just('v').ignore_then(stri).map(|a|Values::Variable(a,3));
         let objvar_ref = just('v').ignore_then(stri).then_ignore(just('.')).then(stri).map(|(obj,var)|Values::ObjectVariable(obj, var));
-        let selfvar_ref = just("v Self.").ignore_then(stri).map(Values::Variable);
+        let selfvar_ref = just("v Self.").ignore_then(stri).map(|a|Values::Variable(a,4));
 
         let def = just("define").ignore_then(var.or(obj));
 
-        let value = stri.map(Values::Str).or(obj_ref).or(objvar_ref).or(var_ref);
+        let value = stri.map(Values::Str).or(obj_ref).or(objvar_ref).or(var_ref).or(selfvar_ref);
 
         let block = ident()
             .then(
