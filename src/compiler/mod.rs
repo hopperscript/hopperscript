@@ -45,13 +45,13 @@ pub mod compiler {
                         datum: None,
                     },
 
-                    Values::Variable(v) => {
+                    Values::Variable(v, code) => {
                         let var = proj
                             .variables
                             .to_owned()
                             .into_iter()
                             .find(|p| p.name == v)
-                            .unwrap()
+                            .expect("Variable does not exist?")
                             .object_id_string;
 
                         Value {
@@ -59,9 +59,42 @@ pub mod compiler {
                             datum: Some(
                                 to_dynamic(Datum {
                                     variable: Some(var),
-                                    typ: 8003,
+                                    typ: 8000 + code,
                                     block_class: None,
                                     params: None,
+                                    object: None,
+                                })
+                                .unwrap(),
+                            ),
+                        }
+                    }
+
+                    Values::ObjectVariable(o, v) => {
+                        //copy-paste
+                        let var = proj
+                            .variables
+                            .to_owned()
+                            .into_iter()
+                            .find(|p| p.name == v)
+                            .unwrap()
+                            .object_id_string;
+                        let obj = proj
+                            .objects
+                            .to_owned()
+                            .into_iter()
+                            .find(|p| p.name == o)
+                            .unwrap()
+                            .id;
+
+                        Value {
+                            value: "".to_string(),
+                            datum: Some(
+                                to_dynamic(Datum {
+                                    variable: Some(var),
+                                    typ: 8000,
+                                    block_class: None,
+                                    params: None,
+                                    object: Some(obj),
                                 })
                                 .unwrap(),
                             ),
@@ -79,13 +112,15 @@ pub mod compiler {
     pub enum Values {
         Object(String),
         Str(String),
-        Variable(String),
+        Variable(String, i32),
+        ObjectVariable(String, String),
     }
 
     #[derive(Clone, Debug)]
     pub enum DefineTypes {
         Object(String),
-        Variable,
+        /// i32 = the "code"
+        Variable(i32),
         Ability(Option<Vec<BlockAST>>),
     }
 
@@ -218,11 +253,6 @@ pub mod compiler {
             .then_ignore(just('"'))
             .collect::<String>();
 
-        let obj_ref = just('o').ignore_then(stri).map(Values::Object);
-        let var_ref = just('v').ignore_then(stri).map(Values::Variable);
-
-        let value = stri.map(Values::Str).or(obj_ref).or(var_ref);
-
         let abil = just("ability!")
             .ignore_then(stri.delimited_by(just('('), just(')')))
             .padded()
@@ -232,27 +262,11 @@ pub mod compiler {
                 typ: AstTypes::Ability,
             });
 
-        let block = ident()
-            .then(
-                value
-                    .separated_by(just(','))
-                    .allow_trailing()
-                    .delimited_by(just('('), just(')')),
-            )
-            .padded()
-            .map(|(a, b)| BlockAST {
-                name: a,
-                params: b,
-                typ: AstTypes::Block,
-            });
-
-        let block_or_abil = block.or(abil);
-
         let var = just("var")
             .padded()
             .ignore_then(stri.padded())
             .map(|b| Script::Define {
-                typ: DefineTypes::Variable,
+                typ: DefineTypes::Variable(3),
                 name: b,
             });
 
@@ -269,6 +283,40 @@ pub mod compiler {
                 typ: DefineTypes::Object(c),
                 name: a,
             });
+
+        let obj_ref = just('o').ignore_then(stri).map(Values::Object);
+        let var_ref = just('v').ignore_then(stri).map(|a| Values::Variable(a, 3));
+        let objvar_ref = just('v')
+            .ignore_then(stri)
+            .then_ignore(just('.'))
+            .then(stri)
+            .map(|(obj, var)| Values::ObjectVariable(obj, var));
+        let selfvar_ref = just("v Self.")
+            .ignore_then(stri)
+            .map(|a| Values::Variable(a, 4));
+
+        let value = stri
+            .map(Values::Str)
+            .or(obj_ref)
+            .or(objvar_ref)
+            .or(var_ref)
+            .or(selfvar_ref);
+
+        let block = ident()
+            .then(
+                value
+                    .separated_by(just(','))
+                    .allow_trailing()
+                    .delimited_by(just('('), just(')')),
+            )
+            .padded()
+            .map(|(a, b)| BlockAST {
+                name: a,
+                params: b,
+                typ: AstTypes::Block,
+            });
+
+        let block_or_abil = block.or(abil);
 
         let ability_def = just("ability")
             .padded()
@@ -408,9 +456,9 @@ pub mod compiler {
             match v {
                 Script::Define { typ, name } => {
                     match typ {
-                        DefineTypes::Variable => proj.variables.push(Variable {
+                        DefineTypes::Variable(code) => proj.variables.push(Variable {
                             name: name.to_string(),
-                            typ: 8003,
+                            typ: 8000 + code,
                             object_id_string: giv_me_uuid(),
                         }),
 
