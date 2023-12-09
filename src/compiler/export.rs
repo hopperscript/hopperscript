@@ -1,5 +1,5 @@
 //Convert `Project` struct into JSON
-use crate::types::{Project};
+use crate::types::Project;
 
 // perform this function on the final result
 // fn typ_to_type(obj: &mut Value) -> &mut Value{
