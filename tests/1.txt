@@ -27,4 +27,15 @@ for "more" {
     set_variable(v"test", "100")
     move_forward(v"test")
   }
+
+  when is_tapped(o"more") {
+    turn("60")
+    set_position(v"test", "90")
+    flip()
+    change_x(v"idk"."test")
+    change_y(v"idk"."test")
+    set_speed("-9999")
+    set_angle("80")
+    set_origin("10", v"more"."test")
+  }
 }

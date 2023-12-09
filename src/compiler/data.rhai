@@ -1,3 +1,4 @@
+// OBJECTS
 fn Square(name){
   #{
     name: name,
@@ -10,6 +11,9 @@ fn Square(name){
   }
 }
 
+objects.push(Fn("Square"));
+
+// RULES
 fn game_starts(o, par, proj) {
   [
 	  #{
@@ -51,14 +55,10 @@ fn is_tapped(o, param, proj) {
 	]
 }
 
-fn destroy(par) {
-	#{
-		"block_class": "method",
-		"type": 55,
-		"description": "Destroy"
-	}
-}
+rules.push(Fn("game_starts"));
+rules.push(Fn("is_tapped"));
 
+// MOVEMENT
 fn move_forward(par) {
 	#{
 		"block_class": "method",
@@ -74,6 +74,141 @@ fn move_forward(par) {
 	}
 }
 
+fn turn(par) {
+	#{
+		"block_class": "method",
+		"type": 24,
+		"description": "Turn",
+		"parameters": [
+			paramset(par[0], #{
+				"defaultValue": "",
+				"key": "degrees",
+				"type": 57
+			})
+		]
+	}
+}
+
+fn set_position(par) {
+	#{
+		"block_class": "method",
+		"type": 41,
+		"description": "Set Position",
+		"parameters": [
+			paramset(par[0], #{
+				"defaultValue": "",
+				"key": "to x",
+				"type": 57
+			}),
+			paramset(par[1], #{
+				"defaultValue": "",
+				"key": "y",
+				"type": 57
+			})
+		]
+	}
+}
+
+fn flip(par) {
+	#{
+		"block_class": "method",
+		"type": 50,
+		"description": "Flip"
+	}
+}
+
+fn change_x(par) {
+	#{
+		"block_class": "method",
+		"type": 27,
+		"description": "Change X by",
+		"parameters": [
+			paramset(par[0], #{
+				"defaultValue": "",
+				"key": "",
+				"type": 57
+			})
+		]
+	}
+}
+
+fn change_y(par) {
+	#{
+		"block_class": "method",
+		"type": 28,
+		"description": "Change Y by",
+		"parameters": [
+			paramset(par[0], #{
+				"defaultValue": "",
+				"key": "",
+				"type": 57
+			})
+		]
+	}
+}
+
+fn set_speed(par) {
+	#{
+		"block_class": "method",
+		"type": 34,
+		"description": "Set Speed",
+		"parameters": [
+			paramset(par[0], #{
+				"defaultValue": "",
+				"key": "to",
+				"type": 57
+			})
+		]
+	}
+}
+
+fn set_angle(par) {
+	#{
+		"block_class": "method",
+		"type": 39,
+		"description": "Set Angle",
+		"parameters": [
+			paramset(par[0], #{
+				"defaultValue": "",
+				"key": "",
+				"type": 57
+			})
+		]
+	}
+}
+
+fn set_origin(par) {
+	#{
+		"block_class": "method",
+		"type": 59,
+		"description": "Set Origin",
+		"parameters": [
+			paramset(par[0], #{
+				"defaultValue": "",
+				"key": "to x",
+				"type": 57
+			}),
+			paramset(par[1], #{
+				"defaultValue": "",
+				"key": "y",
+				"type": 57
+			})
+		]
+	}
+}
+
+blocks.push(Fn("move_forward"));
+blocks.push(Fn("turn"));
+blocks.push(Fn("set_position"));
+blocks.push(Fn("flip"));
+blocks.push(Fn("change_x"));
+blocks.push(Fn("change_y"));
+blocks.push(Fn("set_speed"));
+blocks.push(Fn("set_angle"));
+blocks.push(Fn("set_origin"));
+
+
+// VARIABLES
 fn set_variable(par) {
 	#{
 		"block_class": "method",
@@ -94,9 +229,15 @@ fn set_variable(par) {
 	}
 }
 
-objects.push(Fn("Square"));
-rules.push(Fn("game_starts"));
-blocks.push(Fn("destroy"));
-blocks.push(Fn("move_forward"));
 blocks.push(Fn("set_variable"));
-rules.push(Fn("is_tapped"));
+
+// CONTROL
+fn destroy(par) {
+	#{
+		"block_class": "method",
+		"type": 55,
+		"description": "Destroy"
+	}
+}
+
+blocks.push(Fn("destroy"));
