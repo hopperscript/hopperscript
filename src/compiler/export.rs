@@ -22,7 +22,8 @@ use crate::types::{Project};
 // }
 
 pub fn to_json(prj: Project) -> String {
-    serde_json::to_string(&prj).expect("Failed to export project JSON")
+    // TODO should prettify till it's ready i guess
+    serde_json::to_string_pretty(&prj).expect("Failed to export project JSON")
     // println!("{:#?}", prj.rules);
     // let mut json = json!({
     //   "playerVersion": "1.5.0",

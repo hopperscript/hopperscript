@@ -305,8 +305,8 @@ pub mod compiler {
         let block = ident()
             .then(
                 value
+                    .padded()
                     .separated_by(just(','))
-                    .allow_trailing()
                     .delimited_by(just('('), just(')')),
             )
             .padded()

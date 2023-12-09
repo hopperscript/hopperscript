@@ -9,15 +9,22 @@ define ability "hmm(os)" {
 }
 
 for "idk" {
-
   when game_starts() {
-    move_forward("20")
+    move_forward("900")
     
-    ability!("hmm(os)")
+    set_variable(v"idk"."test", "-100")
     move_forward(v"idk"."test")
   }
 
   when is_tapped(o"more") {
+    ability!("hmm(os)")
     destroy()
+  }
+}
+
+for "more" {
+  when game_starts() {
+    set_variable(v"test", "100")
+    move_forward(v"test")
   }
 }

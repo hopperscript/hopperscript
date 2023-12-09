@@ -74,8 +74,29 @@ fn move_forward(par) {
 	}
 }
 
+fn set_variable(par) {
+	#{
+		"block_class": "method",
+		"type": 45,
+		"description": "Set",
+		"parameters": [
+			paramset(par[0], #{
+				"defaultValue": "",
+				"key": "",
+				"type": 47
+			}),
+			paramset(par[1], #{
+				"defaultValue": "",
+				"key": "to",
+				"type": 48
+			})
+		]
+	}
+}
+
 objects.push(Fn("Square"));
 rules.push(Fn("game_starts"));
 blocks.push(Fn("destroy"));
 blocks.push(Fn("move_forward"));
+blocks.push(Fn("set_variable"));
 rules.push(Fn("is_tapped"));
