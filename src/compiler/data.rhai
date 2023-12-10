@@ -94,9 +94,25 @@ fn set_variable(par) {
 	}
 }
 
+fn set_color(par) {
+	#{
+		"block_class": "method",
+		"type": 54,
+		"description": "Set Color",
+		"parameters": [
+			paramset(par[0], #{
+				"defaultValue": "",
+				"key": "",
+				"type": 44
+			})
+		]
+	}
+}
+
 objects.push(Fn("Square"));
 rules.push(Fn("game_starts"));
 blocks.push(Fn("destroy"));
 blocks.push(Fn("move_forward"));
 blocks.push(Fn("set_variable"));
 rules.push(Fn("is_tapped"));
+blocks.push(Fn("set_color"));

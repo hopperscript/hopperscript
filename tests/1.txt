@@ -11,7 +11,7 @@ define ability "hmm(os)" {
 for "idk" {
   when game_starts() {
     move_forward("900")
-    
+    set_color(#0dd)
     set_variable(v"idk"."test", "-100")
     move_forward(v"idk"."test")
   }

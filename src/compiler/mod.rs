@@ -23,6 +23,10 @@ pub mod compiler {
         Uuid::new_v4().to_string().to_uppercase()
     }
 
+    fn is_hex(c: char) -> bool{
+        "0123456789abcdefABCDEF".contains(c)
+    } 
+
     /// turn `Vec<Values>` to `Vec<String>` to `Dynamic`
     fn transform_vals(params: Vec<Values>, proj: &Project) -> Dynamic {
         to_dynamic::<Vec<Value>>(
@@ -253,6 +257,15 @@ pub mod compiler {
             .then_ignore(just('"'))
             .collect::<String>();
 
+        let hex_color_short = just::<char, char, Simple<char>>('#')
+        .chain(filter(|c:&char|is_hex(*c)).repeated().exactly(3))
+        .collect::<String>();
+        let hex_color_long = just::<char, char, Simple<char>>('#')
+        .chain(filter(|c:&char|is_hex(*c)).repeated().exactly(6))
+        .collect::<String>();
+
+        let hex_color = hex_color_long.or(hex_color_short);
+
         let abil = just("ability!")
             .ignore_then(stri.delimited_by(just('('), just(')')))
             .padded()
@@ -294,9 +307,9 @@ pub mod compiler {
         let selfvar_ref = just("v Self.")
             .ignore_then(stri)
             .map(|a| Values::Variable(a, 4));
-
         let value = stri
             .map(Values::Str)
+            .or(hex_color.map(Values::Str))
             .or(obj_ref)
             .or(objvar_ref)
             .or(var_ref)
