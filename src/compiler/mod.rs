@@ -266,6 +266,10 @@ pub mod compiler {
 
         let hex_color = hex_color_long.or(hex_color_short);
 
+        let number = filter::<_,_,Simple<char>>(|c:&char|c.is_ascii_digit())
+        .repeated().at_least(1)
+        .collect::<String>();
+
         let abil = just("ability!")
             .ignore_then(stri.delimited_by(just('('), just(')')))
             .padded()
@@ -310,6 +314,7 @@ pub mod compiler {
         let value = stri
             .map(Values::Str)
             .or(hex_color.map(Values::Str))
+            .or(number.map(Values::Str))
             .or(obj_ref)
             .or(objvar_ref)
             .or(var_ref)

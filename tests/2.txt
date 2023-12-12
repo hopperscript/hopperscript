@@ -1,0 +1,7 @@
+define object "me" = objects.Square
+
+for"me"{
+	when game_starts(){
+		move_forward(69420)
+	}
+}
