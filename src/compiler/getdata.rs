@@ -1,14 +1,4 @@
-use std::{fs, path::Path};
-
-use chumsky::primitive::Container;
-use rhai::{
-    serde::{from_dynamic, to_dynamic},
-    Array, Dynamic, Engine, EvalAltResult, FnPtr, Map, Scope, AST,
-};
 use serde::Deserialize;
-use uuid::Uuid;
-
-use crate::{compiler::Value, types::Block};
 
 pub struct CompiledData {
     pub obj: Vec<ObjectData>,
@@ -39,32 +29,7 @@ pub struct ObjectData {
     pub id: i32,
 }
 
-fn uuid() -> Result<String, Box<EvalAltResult>> {
-    Ok(Uuid::new_v4().to_string().to_uppercase())
-}
-
-fn get_fnptr_list(name: &str, scope: &Scope) -> Vec<FnPtr> {
-    scope
-        .get(name)
-        .unwrap()
-        .to_owned()
-        .into_typed_array::<FnPtr>()
-        .unwrap()
-}
-
-fn paramset(value: Dynamic, mut map: Map) -> Result<Map, Box<EvalAltResult>> {
-    let val: Value = from_dynamic(&value).unwrap();
-
-    if val.datum.is_some() {
-        map.insert("datum".into(), to_dynamic(val.datum).unwrap());
-    }
-
-    map.insert("value".into(), to_dynamic(val.value).unwrap());
-
-    Ok(map)
-}
-
-pub fn generate_data(path: &str) -> CompiledData {
+pub fn generate_blocks() -> CompiledData {
     // TODO: SUPPORT CUSTOM PATHS
     let contents = include_str!("newdata.json");
     let objcontents = include_str!("objects.json");

@@ -7,10 +7,7 @@ mod types;
 pub mod compiler {
     use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
     use chumsky::prelude::*;
-    use chumsky::text::{ident, keyword};
-    use rhai::serde::{from_dynamic, to_dynamic};
-    use rhai::{Dynamic, Map};
-    use serde::de::value;
+    use chumsky::text::ident;
     use serde::{Deserialize, Serialize};
     use std::time::{SystemTime, UNIX_EPOCH};
     use uuid::Uuid;
@@ -273,7 +270,7 @@ pub mod compiler {
 
         gen_project(
             &a.unwrap(),
-            getdata::generate_data("src/compiler/data.rhai"),
+            getdata::generate_blocks(),
         )
     }
 
