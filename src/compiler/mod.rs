@@ -30,86 +30,77 @@ pub mod compiler {
     }
 
     /// turn `Vec<Values>` to `Vec<String>` to `Dynamic`
-    fn transform_vals(params: Vec<Values>, proj: &Project) -> Dynamic {
-        to_dynamic::<Vec<Value>>(
-            params
-                .into_iter()
-                .map(|v| match v {
-                    Values::Object(v) => Value {
-                        value: proj
-                            .objects
-                            .to_owned()
-                            .into_iter()
-                            .find(|i| i.name == v)
-                            .expect("Object not found")
-                            .id,
-                        datum: None,
-                    },
+    fn transform_vals(params: Vec<Values>, proj: &Project) -> Vec<Value> {
+        params
+            .into_iter()
+            .map(|v| match v {
+                Values::Object(v) => Value {
+                    value: proj
+                        .objects
+                        .to_owned()
+                        .into_iter()
+                        .find(|i| i.name == v)
+                        .expect("Object not found")
+                        .id,
+                    datum: None,
+                },
 
-                    Values::Str(v) => Value {
-                        value: v,
-                        datum: None,
-                    },
+                Values::Str(v) => Value {
+                    value: v,
+                    datum: None,
+                },
 
-                    Values::Variable(v, code) => {
-                        let var = proj
-                            .variables
-                            .to_owned()
-                            .into_iter()
-                            .find(|p| p.name == v)
-                            .expect("Variable does not exist?")
-                            .object_id_string;
+                Values::Variable(v, code) => {
+                    let var = proj
+                        .variables
+                        .to_owned()
+                        .into_iter()
+                        .find(|p| p.name == v)
+                        .expect("Variable does not exist?")
+                        .object_id_string;
 
-                        Value {
-                            value: "".to_string(),
-                            datum: Some(
-                                to_dynamic(Datum {
-                                    variable: Some(var),
-                                    typ: 8000 + code,
-                                    block_class: None,
-                                    params: None,
-                                    object: None,
-                                })
-                                .unwrap(),
-                            ),
-                        }
+                    Value {
+                        value: "".to_string(),
+                        datum: Some(Datum {
+                            variable: Some(var),
+                            typ: 8000 + code,
+                            block_class: None,
+                            params: None,
+                            object: None,
+                        }),
                     }
+                }
 
-                    Values::ObjectVariable(o, v) => {
-                        //copy-paste
-                        let var = proj
-                            .variables
-                            .to_owned()
-                            .into_iter()
-                            .find(|p| p.name == v)
-                            .unwrap()
-                            .object_id_string;
-                        let obj = proj
-                            .objects
-                            .to_owned()
-                            .into_iter()
-                            .find(|p| p.name == o)
-                            .unwrap()
-                            .id;
+                Values::ObjectVariable(o, v) => {
+                    //copy-paste
+                    let var = proj
+                        .variables
+                        .to_owned()
+                        .into_iter()
+                        .find(|p| p.name == v)
+                        .unwrap()
+                        .object_id_string;
+                    let obj = proj
+                        .objects
+                        .to_owned()
+                        .into_iter()
+                        .find(|p| p.name == o)
+                        .unwrap()
+                        .id;
 
-                        Value {
-                            value: "".to_string(),
-                            datum: Some(
-                                to_dynamic(Datum {
-                                    variable: Some(var),
-                                    typ: 8000,
-                                    block_class: None,
-                                    params: None,
-                                    object: Some(obj),
-                                })
-                                .unwrap(),
-                            ),
-                        }
+                    Value {
+                        value: "".to_string(),
+                        datum: Some(Datum {
+                            variable: Some(var),
+                            typ: 8000,
+                            block_class: None,
+                            params: None,
+                            object: Some(obj),
+                        }),
                     }
-                })
-                .collect(),
-        )
-        .unwrap()
+                }
+            })
+            .collect()
     }
 
     pub type Span = std::ops::Range<usize>;
@@ -161,10 +152,10 @@ pub mod compiler {
         pub typ: AstTypes,
     }
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, Debug)]
     pub struct Value {
         pub value: String,
-        pub datum: Option<Dynamic>,
+        pub datum: Option<Datum>,
     }
 
     /// The main compile fn
@@ -441,11 +432,29 @@ pub mod compiler {
                         .find(|v| v.name == c.name)
                         .expect("Block not found");
 
+                    let transformed = transform_vals(c.params.clone(), &proj);
+                    let params = transformed
+                        .into_iter()
+                        .enumerate()
+                        .map(|(i, v)| Param {
+                            datum: v.datum,
+                            default_value: "".to_string(),
+                            key: "".to_string(),
+                            typ: match ptr.parameters[i].typ.as_str() {
+                                "num" => 57,
+                                "evt" => 50,
+                                &_ => 0,
+                            },
+                            value: v.value,
+                            variable: None,
+                        })
+                        .collect::<Vec<Param>>();
+
                     let block = Block {
                         block_class: "method".to_string(),
                         typ: ptr.id,
                         description: ptr.label,
-                        parameters: None,
+                        parameters: Some(params),
                         control_script: None,
                     };
 
@@ -537,7 +546,7 @@ pub mod compiler {
                 Script::On { obj, con } => {
                     for v in con {
                         match v {
-                            Script::Rule { name, con, params: _ } => {
+                            Script::Rule { name, con, params } => {
                                 let ob = proj
                                     .objects
                                     .iter()
@@ -551,6 +560,38 @@ pub mod compiler {
                                     .into_iter()
                                     .find(|v| v.name == name)
                                     .expect("Rule not found");
+
+                                //make this a func for reuse with the block part
+                                let transformed = transform_vals(params, &proj);
+                                let paramets = transformed
+                                    .into_iter()
+                                    .enumerate()
+                                    .map(|(i, v)| Param {
+                                        datum: v.datum,
+                                        default_value: "".to_string(),
+                                        key: "".to_string(),
+                                        typ: match f.parameters[i].typ.as_str() {
+                                            "num" => 57,
+                                            "evt" => 50,
+                                            &_ => 0,
+                                        },
+                                        value: v.value.to_owned(),
+                                        variable: if f.parameters[i].typ.as_str() == "evt" {
+                                            Some(
+                                                proj.event_params
+                                                    .to_owned()
+                                                    .into_iter()
+                                                    .find(|ev| {
+                                                        ev.object_id.as_ref().unwrap() == &v.value
+                                                    })
+                                                    .expect("Object not found")
+                                                    .id,
+                                            )
+                                        } else {
+                                            None
+                                        },
+                                    })
+                                    .collect::<Vec<Param>>();
 
                                 // let res = f
                                 //     .call(
@@ -579,7 +620,7 @@ pub mod compiler {
                                             typ: f.id,
                                             object: None,
                                             variable: None,
-                                            params: None,
+                                            params: Some(paramets),
                                         }),
                                         typ: 52,
                                         value: "".to_string(),

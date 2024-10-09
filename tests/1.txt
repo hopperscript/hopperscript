@@ -1,11 +1,9 @@
 define var "test"
-define object "idk" = objects.Square
-define object "more" = objects.Square
+define object "idk" = objects.square
+define object "more" = objects.square
 
 define ability "hmm(os)" {
   move_forward("20")
-
-  ability!("hmm(os)")
 }
 
 for "idk" {

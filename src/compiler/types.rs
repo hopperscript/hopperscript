@@ -12,7 +12,7 @@ pub struct Project {
     pub event_params: Vec<EventParam>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct EventParam {
     pub id: String,
     pub description: String,
