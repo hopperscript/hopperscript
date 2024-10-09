@@ -351,8 +351,8 @@ pub mod compiler {
             .ignore_then(ident().padded())
             .then(
                 obj_ref
+                    .padded()
                     .separated_by(just(','))
-                    .allow_trailing()
                     .delimited_by(just('('), just(')')),
             )
             .then(

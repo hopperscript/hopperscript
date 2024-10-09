@@ -25,4 +25,12 @@ for "more" {
     set_variable(v"test", "100")
     move_forward(v"test")
   }
+
+  when is_tapped(o"idk") {
+    move_forward("100")
+  }
+
+  when is_touching(o"more", o"idk") {
+    move_forward("-100")
+  }
 }
