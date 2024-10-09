@@ -7,9 +7,10 @@ mod types;
 pub mod compiler {
     use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
     use chumsky::prelude::*;
-    use chumsky::text::ident;
+    use chumsky::text::{ident, keyword};
     use rhai::serde::{from_dynamic, to_dynamic};
     use rhai::{Dynamic, Map};
+    use serde::de::value;
     use serde::{Deserialize, Serialize};
     use std::time::{SystemTime, UNIX_EPOCH};
     use uuid::Uuid;
@@ -27,6 +28,17 @@ pub mod compiler {
 
     fn is_hex(c: char) -> bool {
         "0123456789abcdefABCDEF".contains(c)
+    }
+
+    fn value_to_param(value: &Value, typ: i32, variable: Option<String>) -> Param {
+        Param {
+            datum: value.datum.to_owned(),
+            default_value: "".to_string(),
+            key: "".to_string(),
+            typ,
+            value: value.value.to_owned(),
+            variable,
+        }
     }
 
     /// turn `Vec<Values>` to `Vec<String>` to `Dynamic`
@@ -99,6 +111,34 @@ pub mod compiler {
                         }),
                     }
                 }
+
+                Values::Conditional(v1, cond, v2) => {
+                    let id = match cond.as_str() {
+                        "==" => 1000,
+                        "!=" => 1001,
+                        "<" => 1002,
+                        ">" => 1003,
+                        "and" => 1004,
+                        "or" => 1005,
+                        ">=" => 1006,
+                        "<=" => 1007,
+                        &_ => 0,
+                    };
+
+                    Value {
+                        value: "".to_string(),
+                        datum: Some(Datum {
+                            block_class: Some("conditionalOperator".to_string()),
+                            object: None,
+                            typ: id,
+                            variable: None,
+                            params: Some(vec![
+                                value_to_param(&transform_vals(vec![*v1], proj)[0], 42, None),
+                                value_to_param(&transform_vals(vec![*v2], proj)[0], 42, None),
+                            ]),
+                        }),
+                    }
+                }
             })
             .collect()
     }
@@ -111,6 +151,7 @@ pub mod compiler {
         Str(String),
         Variable(String, i32),
         ObjectVariable(String, String),
+        Conditional(Box<Values>, String, Box<Values>),
     }
 
     #[derive(Clone, Debug)]
@@ -152,7 +193,7 @@ pub mod compiler {
         pub typ: AstTypes,
     }
 
-    #[derive(Serialize, Deserialize, Debug)]
+    #[derive(Serialize, Deserialize, Debug, Clone)]
     pub struct Value {
         pub value: String,
         pub datum: Option<Datum>,
@@ -347,10 +388,15 @@ pub mod compiler {
 
         let def = just("define").ignore_then(var.or(obj.or(ability_def)));
 
+        let conditional = value
+            .then(just("==").or(just("!=")).padded())
+            .then(value)
+            .map(|((a, b), c)| Values::Conditional(Box::new(a), b.to_string(), Box::new(c)));
         let rule = just("when")
-            .ignore_then(ident().padded())
+            .ignore_then(just("cond").map(|s| s.to_string()).or(ident()).padded())
             .then(
                 obj_ref
+                    .or(conditional)
                     .padded()
                     .separated_by(just(','))
                     .delimited_by(just('('), just(')')),
@@ -366,7 +412,8 @@ pub mod compiler {
                 name: a,
                 con: b.get_or_insert(vec![]).to_vec(),
                 params: c,
-            });
+            })
+            .padded();
 
         let on = just("for")
             .ignore_then(stri.padded())
@@ -554,44 +601,58 @@ pub mod compiler {
                                     .expect("No object with that name");
                                 let object = proj.objects[ob].to_owned();
 
-                                let f = bd
-                                    .rules
-                                    .to_owned()
-                                    .into_iter()
-                                    .find(|v| v.name == name)
-                                    .expect("Rule not found");
+                                let transformed = transform_vals(params, &proj);
 
                                 //make this a func for reuse with the block part
-                                let transformed = transform_vals(params, &proj);
-                                let paramets = transformed
-                                    .into_iter()
-                                    .enumerate()
-                                    .map(|(i, v)| Param {
-                                        datum: v.datum,
-                                        default_value: "".to_string(),
-                                        key: "".to_string(),
-                                        typ: match f.parameters[i].typ.as_str() {
-                                            "num" => 57,
-                                            "evt" => 50,
-                                            &_ => 0,
-                                        },
-                                        value: v.value.to_owned(),
-                                        variable: if f.parameters[i].typ.as_str() == "evt" {
-                                            Some(
-                                                proj.event_params
-                                                    .to_owned()
-                                                    .into_iter()
-                                                    .find(|ev| {
-                                                        ev.object_id.as_ref().unwrap() == &v.value
-                                                    })
-                                                    .expect("Object not found")
-                                                    .id,
-                                            )
-                                        } else {
-                                            None
-                                        },
-                                    })
-                                    .collect::<Vec<Param>>();
+                                let datum = if name != "cond" {
+                                    let f = bd
+                                        .rules
+                                        .to_owned()
+                                        .into_iter()
+                                        .find(|v| v.name == name)
+                                        .expect("Rule not found");
+
+                                    let paramets = transformed
+                                        .into_iter()
+                                        .enumerate()
+                                        .map(|(i, v)| Param {
+                                            datum: v.datum,
+                                            default_value: "".to_string(),
+                                            key: "".to_string(),
+                                            typ: match f.parameters[i].typ.as_str() {
+                                                "num" => 57,
+                                                "evt" => 50,
+                                                &_ => 0,
+                                            },
+                                            value: v.value.to_owned(),
+                                            variable: if f.parameters[i].typ.as_str() == "evt" {
+                                                Some(
+                                                    proj.event_params
+                                                        .to_owned()
+                                                        .into_iter()
+                                                        .find(|ev| {
+                                                            ev.object_id.as_ref().unwrap()
+                                                                == &v.value
+                                                        })
+                                                        .expect("Object not found")
+                                                        .id,
+                                                )
+                                            } else {
+                                                None
+                                            },
+                                        })
+                                        .collect::<Vec<Param>>();
+
+                                    Datum {
+                                        block_class: Some("operator".to_string()),
+                                        typ: f.id,
+                                        object: None,
+                                        variable: None,
+                                        params: Some(paramets),
+                                    }
+                                } else {
+                                    value_to_param(&transformed[0], 52, None).datum.unwrap()
+                                };
 
                                 // let res = f
                                 //     .call(
@@ -615,13 +676,7 @@ pub mod compiler {
                                     params: vec![Param {
                                         default_value: "".to_string(),
                                         key: "".to_string(),
-                                        datum: Some(Datum {
-                                            block_class: Some("operator".to_string()),
-                                            typ: f.id,
-                                            object: None,
-                                            variable: None,
-                                            params: Some(paramets),
-                                        }),
+                                        datum: Some(datum),
                                         typ: 52,
                                         value: "".to_string(),
                                         variable: None,

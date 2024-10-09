@@ -18,6 +18,19 @@ for "idk" {
     ability!("hmm(os)")
     destroy()
   }
+
+  when is_tapped(o"idk") {
+    set_variable(v"idk"."test", "110")
+  }
+
+  when cond(v"idk"."test" != "-100") {
+    destroy()
+  }
+
+  when cond(v"test" == "100") {
+    grow_by("100")
+    increase_variable(v"test", "1")
+  }
 }
 
 for "more" {
@@ -28,6 +41,11 @@ for "more" {
 
   when is_tapped(o"idk") {
     move_forward("100")
+  }
+
+  when cond(v"test" == "100") {
+    grow_by("100")
+    increase_variable(v"test", "1")
   }
 
   when is_touching(o"more", o"idk") {
