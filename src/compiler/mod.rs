@@ -2,6 +2,7 @@ mod export;
 mod getdata;
 mod types;
 
+// gosh this is such a mess
 /// Main module for the compiler
 pub mod compiler {
     use ariadne::{Color, Fmt, Label, Report, ReportKind, Source};
@@ -16,16 +17,17 @@ pub mod compiler {
     pub use crate::export::to_json;
     use crate::getdata::{self, CompiledData};
     use crate::types::{
-        Ability, Block, ControlScript, Datum, EventParam, Param, Project, Rule, Scene, Variable,
+        Ability, Block, ControlScript, Datum, EventParam, Object, Param, Project, Rule, Scene,
+        Variable,
     };
 
     fn giv_me_uuid() -> String {
         Uuid::new_v4().to_string().to_uppercase()
     }
 
-    fn is_hex(c: char) -> bool{
+    fn is_hex(c: char) -> bool {
         "0123456789abcdefABCDEF".contains(c)
-    } 
+    }
 
     /// turn `Vec<Values>` to `Vec<String>` to `Dynamic`
     fn transform_vals(params: Vec<Values>, proj: &Project) -> Dynamic {
@@ -258,17 +260,18 @@ pub mod compiler {
             .collect::<String>();
 
         let hex_color_short = just::<char, char, Simple<char>>('#')
-        .chain(filter(|c:&char|is_hex(*c)).repeated().exactly(3))
-        .collect::<String>();
+            .chain(filter(|c: &char| is_hex(*c)).repeated().exactly(3))
+            .collect::<String>();
         let hex_color_long = just::<char, char, Simple<char>>('#')
-        .chain(filter(|c:&char|is_hex(*c)).repeated().exactly(6))
-        .collect::<String>();
+            .chain(filter(|c: &char| is_hex(*c)).repeated().exactly(6))
+            .collect::<String>();
 
         let hex_color = hex_color_long.or(hex_color_short);
 
-        let number = filter::<_,_,Simple<char>>(|c:&char|c.is_ascii_digit())
-        .repeated().at_least(1)
-        .collect::<String>();
+        let number = filter::<_, _, Simple<char>>(|c: &char| c.is_ascii_digit())
+            .repeated()
+            .at_least(1)
+            .collect::<String>();
 
         let abil = just("ability!")
             .ignore_then(stri.delimited_by(just('('), just(')')))
@@ -435,18 +438,18 @@ pub mod compiler {
                         .blocks
                         .to_owned()
                         .into_iter()
-                        .find(|v| v.fn_name() == c.name)
+                        .find(|v| v.name == c.name)
                         .expect("Block not found");
 
-                    let transformed = transform_vals(c.params.clone(), &proj);
+                    let block = Block {
+                        block_class: "method".to_string(),
+                        typ: ptr.id,
+                        description: ptr.label,
+                        parameters: None,
+                        control_script: None,
+                    };
 
-                    let call = ptr
-                        .call(&bd.eng, &bd.ast, (transformed,))
-                        .expect("Failed to get block");
-
-                    ability_json
-                        .blocks
-                        .push(from_dynamic::<Block>(&call).expect("Failed to get block"));
+                    ability_json.blocks.push(block);
                 } else {
                     let ability = if &c.name == ability_json.name.get_or_insert("".to_string()) {
                         ability_json.ability_id.clone()
@@ -487,42 +490,29 @@ pub mod compiler {
                                 .obj
                                 .to_owned()
                                 .into_iter()
-                                .find(|v| v.fn_name() == val)
+                                .find(|v| v.name == val)
                                 .expect("Object not found");
 
-                            let res = f
-                                .call(&bd.eng, &bd.ast, (name,))
-                                .expect("Failed to get object");
+                            let act_res = Object {
+                                filename: "".to_string(),
+                                typ: f.id,
+                                name,
+                                id: giv_me_uuid(),
+                                rules: vec![] as Vec<String>,
+                                x: 10, //dont forget!!
+                                y: 10,
+                            };
 
-                            let mut act_res: Map =
-                                from_dynamic(&res).expect("Failed to get object");
+                            let actbor = &act_res;
 
-                            act_res.insert("rules".into(), (vec![] as Vec<String>).into());
-
-                            // get id from res when needed
-
-                            proj.scenes[0].objects.push(
-                                act_res
-                                    .get("objectID")
-                                    .expect("Failed to insert object to scene")
-                                    .to_string(),
-                            );
+                            proj.scenes[0].objects.push(actbor.id.to_owned());
                             proj.event_params.push(EventParam {
-                                description: act_res
-                                    .get("name")
-                                    .expect("Failed to add object")
-                                    .to_string(),
+                                description: actbor.name.to_owned(),
                                 block_type: 8000,
                                 id: giv_me_uuid(),
-                                object_id: Some(
-                                    act_res
-                                        .get("objectID")
-                                        .expect("Failed to add object")
-                                        .to_string(),
-                                ),
+                                object_id: Some(actbor.id.to_owned()),
                             });
-                            proj.objects
-                                .push(from_dynamic(&act_res.into()).expect("Failed to get object"))
+                            proj.objects.push(act_res)
                         }
 
                         DefineTypes::Ability(mut blocks) => {
@@ -547,7 +537,7 @@ pub mod compiler {
                 Script::On { obj, con } => {
                     for v in con {
                         match v {
-                            Script::Rule { name, con, params } => {
+                            Script::Rule { name, con, params: _ } => {
                                 let ob = proj
                                     .objects
                                     .iter()
@@ -559,25 +549,20 @@ pub mod compiler {
                                     .rules
                                     .to_owned()
                                     .into_iter()
-                                    .find(|v| v.fn_name() == name)
+                                    .find(|v| v.name == name)
                                     .expect("Rule not found");
 
-                                let transformed = transform_vals(params, &proj);
-
-                                let res = f
-                                    .call(
-                                        &bd.eng,
-                                        &bd.ast,
-                                        (
-                                            object.to_owned().id,
-                                            transformed,
-                                            to_dynamic(&proj).unwrap(),
-                                        ),
-                                    )
-                                    .expect("Failed to get rule");
-
-                                let act_res =
-                                    from_dynamic::<Vec<Param>>(&res).expect("Failed to get rule");
+                                // let res = f
+                                //     .call(
+                                //         &bd.eng,
+                                //         &bd.ast,
+                                //         (
+                                //             object.to_owned().id,
+                                //             transformed,
+                                //             to_dynamic(&proj).unwrap(),
+                                //         ),
+                                //     )
+                                //     .expect("Failed to get rule");
 
                                 let ability = giv_me_uuid();
 
@@ -586,7 +571,20 @@ pub mod compiler {
                                     object_id: object.id,
                                     id: giv_me_uuid(),
                                     ability_id: ability.to_owned(),
-                                    params: act_res,
+                                    params: vec![Param {
+                                        default_value: "".to_string(),
+                                        key: "".to_string(),
+                                        datum: Some(Datum {
+                                            block_class: Some("operator".to_string()),
+                                            typ: f.id,
+                                            object: None,
+                                            variable: None,
+                                            params: None,
+                                        }),
+                                        typ: 52,
+                                        value: "".to_string(),
+                                        variable: None,
+                                    }],
                                 };
 
                                 let mut ability_json = Ability {

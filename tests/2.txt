@@ -1,4 +1,4 @@
-define object "me" = objects.Square
+define object "me" = objects.square
 
 for"me"{
 	when game_starts(){

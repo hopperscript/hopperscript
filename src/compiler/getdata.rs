@@ -1,17 +1,42 @@
+use std::{fs, path::Path};
+
+use chumsky::primitive::Container;
 use rhai::{
     serde::{from_dynamic, to_dynamic},
     Array, Dynamic, Engine, EvalAltResult, FnPtr, Map, Scope, AST,
 };
+use serde::Deserialize;
 use uuid::Uuid;
 
-use crate::compiler::Value;
+use crate::{compiler::Value, types::Block};
 
 pub struct CompiledData {
-    pub ast: AST,
-    pub obj: Vec<FnPtr>,
-    pub eng: Engine,
-    pub rules: Vec<FnPtr>,
-    pub blocks: Vec<FnPtr>,
+    pub obj: Vec<ObjectData>,
+    pub rules: Vec<BlockData>,
+    pub blocks: Vec<BlockData>,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+pub struct BlockData {
+    pub name: String,
+    pub parameters: Vec<ParameterData>,
+    pub id: i32,
+    #[serde(rename = "type")]
+    pub typ: String,
+    pub label: String
+}
+
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+pub struct ParameterData {
+    #[serde(rename = "type")]
+    pub typ: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct ObjectData {
+    #[serde(default)]
+    pub name: String,
+    pub id: i32,
 }
 
 fn uuid() -> Result<String, Box<EvalAltResult>> {
@@ -40,33 +65,38 @@ fn paramset(value: Dynamic, mut map: Map) -> Result<Map, Box<EvalAltResult>> {
 }
 
 pub fn generate_data(path: &str) -> CompiledData {
-    let mut ngn = Engine::new();
+    let contents = include_str!("newdata.json");
+    let objcontents = include_str!("objects.json");
+    let blockjson: Vec<BlockData> = serde_json::from_str(contents).expect("oops");
+    let objectjson: Vec<ObjectData> = serde_json::from_str(objcontents).expect("oops");
 
-    // increase if ExprTooDeep
-    ngn.set_max_expr_depths(500, 500);
+    // rename every block n object
+    let betterblockjson = blockjson
+        .into_iter()
+        .map(|v| {
+            let mut y = v;
+            y.name = y.name.replace(" ", "_").to_lowercase();
+            y
+        });
+    let betterobjectjson: Vec<ObjectData> = objectjson
+        .into_iter()
+        .map(|v| {
+            let mut y = v;
+            y.name = y.name.replace(" ", "_").to_lowercase();
+            y
+        })
+        .collect();
 
-    let mut scope = Scope::new();
-
-    scope.push("objects", Array::new());
-    scope.push("rules", Array::new());
-    scope.push("blocks", Array::new());
-
-    ngn.register_result_fn("paramset", paramset);
-
-    ngn.register_result_fn("uuid", uuid);
-
-    let ast = ngn
-        .compile_file_with_scope(&mut scope, path.into())
-        .expect("Failed to load block data");
-
-    ngn.run_file_with_scope(&mut scope, path.into())
-        .expect("Failed to load block data");
+    //filter out rules
+    let rulejson: Vec<BlockData> = betterblockjson.to_owned()
+        .into_iter()
+        .filter(|v: &BlockData| v.typ == "rule")
+        .collect();
+    let actualblockjson: Vec<BlockData> = betterblockjson.into_iter().filter(|v| !rulejson.contains(v)).collect();
 
     CompiledData {
-        obj: get_fnptr_list("objects", &scope),
-        rules: get_fnptr_list("rules", &scope),
-        blocks: get_fnptr_list("blocks", &scope),
-        ast,
-        eng: ngn,
+        obj: betterobjectjson,
+        rules: rulejson,
+        blocks: actualblockjson
     }
 }
