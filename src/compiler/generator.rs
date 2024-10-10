@@ -4,7 +4,7 @@ pub mod generator {
     use crate::types::*;
     use crate::utils::*;
 
-    /// Generate the project JSON data from compiled AST
+    /// Generate the `Project` data from compiled AST
     pub fn gen_project(p: &Vec<Script>, bd: CompiledData) -> Project {
         use radix_fmt::radix;
 
