@@ -31,8 +31,8 @@ pub struct ObjectData {
 
 pub fn generate_blocks() -> CompiledData {
     // TODO: SUPPORT CUSTOM PATHS
-    let contents = include_str!("newdata.json");
-    let objcontents = include_str!("objects.json");
+    let contents = include_str!("data/blocks.json");
+    let objcontents = include_str!("data/objects.json");
     let blockjson: Vec<BlockData> = serde_json::from_str(contents).expect("oops");
     let objectjson: Vec<ObjectData> = serde_json::from_str(objcontents).expect("oops");
 
