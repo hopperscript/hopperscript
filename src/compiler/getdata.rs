@@ -1,34 +1,6 @@
-use serde::Deserialize;
+use crate::types::*;
 
-pub struct CompiledData {
-    pub obj: Vec<ObjectData>,
-    pub rules: Vec<BlockData>,
-    pub blocks: Vec<BlockData>,
-}
-
-#[derive(Deserialize, Debug, PartialEq, Clone)]
-pub struct BlockData {
-    pub name: String,
-    pub parameters: Vec<ParameterData>,
-    pub id: i32,
-    #[serde(rename = "type")]
-    pub typ: String,
-    pub label: String,
-}
-
-#[derive(Deserialize, Debug, PartialEq, Clone)]
-pub struct ParameterData {
-    #[serde(rename = "type")]
-    pub typ: String,
-}
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct ObjectData {
-    #[serde(default)]
-    pub name: String,
-    pub id: i32,
-}
-
+/// Generate block and object data
 pub fn generate_blocks() -> CompiledData {
     // TODO: SUPPORT CUSTOM PATHS
     let contents = include_str!("data/blocks.json");

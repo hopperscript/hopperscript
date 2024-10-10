@@ -113,3 +113,87 @@ pub struct Block {
     #[serde(rename = "controlScript")]
     pub control_script: Option<ControlScript>,
 }
+
+// TYPES
+#[derive(Clone, Debug)]
+pub enum DefineTypes {
+    Object(String),
+    /// i32 = the "code"
+    Variable(i32),
+    Ability(Option<Vec<BlockAST>>),
+}
+
+#[derive(Debug, Clone)]
+pub struct BlockAST {
+    pub name: String,
+    pub params: Vec<Values>,
+    pub typ: AstTypes,
+}
+
+#[derive(Clone, Debug)]
+pub enum Values {
+    Object(String),
+    Str(String),
+    Variable(String, i32),
+    ObjectVariable(String, String),
+    Conditional(Box<Values>, String, Box<Values>),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum AstTypes {
+    Block,
+    Ability,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Value {
+    pub value: String,
+    pub datum: Option<Datum>,
+}
+
+#[derive(Clone, Debug)]
+pub enum Script {
+    Define {
+        typ: DefineTypes,
+        name: String,
+    },
+    //Loop(Vec<Self>),
+    On {
+        obj: String,
+        con: Vec<Script>,
+    },
+    Rule {
+        name: String,
+        con: Vec<BlockAST>,
+        params: Vec<Values>,
+    },
+}
+
+pub struct CompiledData {
+    pub obj: Vec<ObjectData>,
+    pub rules: Vec<BlockData>,
+    pub blocks: Vec<BlockData>,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+pub struct BlockData {
+    pub name: String,
+    pub parameters: Vec<ParameterData>,
+    pub id: i32,
+    #[serde(rename = "type")]
+    pub typ: String,
+    pub label: String,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+pub struct ParameterData {
+    #[serde(rename = "type")]
+    pub typ: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct ObjectData {
+    #[serde(default)]
+    pub name: String,
+    pub id: i32,
+}
