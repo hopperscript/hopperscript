@@ -27,7 +27,7 @@ for "idk" {
     destroy()
   }
 
-  when cond(v"test" == "100") {
+  when cond((v"test" == "100")) {
     grow_by("100")
     increase_variable(v"test", "1")
   }

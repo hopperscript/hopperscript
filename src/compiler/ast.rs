@@ -120,11 +120,15 @@ pub mod ast {
             .then(just("==").or(just("!=")).padded())
             .then(value)
             .map(|((a, b), c)| Values::Conditional(Box::new(a), b.to_string(), Box::new(c)));
+        let actualconditional = conditional
+            .clone()
+            .delimited_by(just('('), just(')'))
+            .or(conditional);
         let rule = just("when")
             .ignore_then(just("cond").map(|s| s.to_string()).or(ident()).padded())
             .then(
                 obj_ref
-                    .or(conditional)
+                    .or(actualconditional)
                     .padded()
                     .separated_by(just(','))
                     .delimited_by(just('('), just(')')),
